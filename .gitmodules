@@ -1,0 +1,6 @@
+[submodule "modules/tools"]
+	path = modules/tools
+	url = git@github.com:OpenCEHardware/ScaleCore-BuildTools.git
+[submodule "modules/dut/npu"]
+	path = modules/dut/npu
+	url = git@github.com:OpenCEHardware/ScaleNPU.git
