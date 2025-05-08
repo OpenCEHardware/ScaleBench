@@ -4,3 +4,6 @@
 [submodule "modules/dut/npu"]
 	path = modules/dut/npu
 	url = git@github.com:OpenCEHardware/ScaleNPU.git
+[submodule "tb/npu/cocotbaxi"]
+	path = tb/npu/cocotbaxi
+	url = git@github.com:alexforencich/cocotbext-axi.git
