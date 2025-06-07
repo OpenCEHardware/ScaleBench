@@ -103,3 +103,15 @@ class AXI4LiteBItem(uvm_sequence_item):
 
     def __str__(self):
         return f"{self.get_name()} : resp={self.resp}"
+
+
+class IRQItem(uvm_sequence_item):
+    def __init__(self, *, name='IRQItem'):
+        super().__init__(name)
+
+    def __eq__(self, other):
+        same = True
+        return same
+
+    def __str__(self):
+        return f"{self.get_name()}"

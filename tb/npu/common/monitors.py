@@ -118,3 +118,21 @@ class AXI4LiteBMonitor(ReadyValidMonitor):
 
     def sample(self):
         return AXI4LiteBItem(resp=self.resp.value)
+
+
+class IRQMonitor(uvm_monitor):
+    def __init__(self, name='IRQMonitor', parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        self.ap = uvm_analysis_port("ap", self)
+
+        self.rst_n = ConfigDB().get(self, "", "rst_n")
+        self.irq = ConfigDB().get(self, "", "irq")
+
+    async def run_phase(self):
+        while True:
+            await RisingEdge(self.irq)
+
+            if self.rst_n.value:
+                self.ap.write(IRQItem())
