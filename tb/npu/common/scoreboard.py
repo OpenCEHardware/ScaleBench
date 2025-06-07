@@ -2,7 +2,7 @@ import pyuvm
 import cocotb
 from pyuvm import *
 from common.constants import *
-from common.model import *
+from common.models import *
 
 
 class NPUScoreboard(uvm_scoreboard):

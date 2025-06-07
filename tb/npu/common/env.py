@@ -5,6 +5,7 @@ from pyuvm import *
 from cocotb.clock import Clock
 from common.agents import *
 from common.scoreboard import *
+from common.models import *
 
 
 class NPUEnv(uvm_env):
@@ -16,6 +17,7 @@ class NPUEnv(uvm_env):
         self.mem_agent = MemoryAgent('mem_agent', self)
         self.scoreboard = NPUScoreboard('scoreboard', self)
         self.mon_irq = IRQMonitor('mon_irq', self)
+        self.mem = Memory(1024)
 
         self.dut = ConfigDB().get(self, "", "dut")
 
