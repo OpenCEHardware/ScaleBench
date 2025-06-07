@@ -14,7 +14,7 @@ class CSRAgent(uvm_agent):
     def build_phase(self):
         self.seqr = uvm_sequencer("seqr", self)
 
-        self.drvr = AXI4LiteDriver("drvr", self)
+        self.drvr = AXI4LiteMasterDriver("drvr", self)
 
         self.mon_csr_ar = AXI4LiteARMonitor("mon_csr_ar", self)
         self.mon_csr_aw = AXI4LiteAWMonitor("mon_csr_aw", self)
@@ -41,7 +41,7 @@ class MemoryAgent(uvm_agent):
     def build_phase(self):
         self.seqr = uvm_sequencer("seqr", self)
 
-        #self.drvr = AXI4BurstDriver("drvr", self)
+        self.drvr = AXI4BurstSlaveDriver("drvr", self)
 
         self.mon_mem_ar = AXI4BurstARMonitor("mon_mem_ar", self)
         self.mon_mem_aw = AXI4BurstAWMonitor("mon_mem_aw", self)
@@ -52,5 +52,4 @@ class MemoryAgent(uvm_agent):
         ConfigDB().set(self, "*", "vif_name", "mem")
 
     def connect_phase(self):
-        pass
-        #self.drvr.seq_item_port.connect(self.seqr.seq_item_export)
+        self.drvr.seq_item_port.connect(self.seqr.seq_item_export)

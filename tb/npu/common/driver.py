@@ -1,13 +1,13 @@
 import pyuvm
 import cocotb
 from cocotb.queue import Queue
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite
 from pyuvm import *
 from common.constants import *
 
 
-class AXI4LiteDriver(uvm_driver):
-    def __init__(self, name="AXI4LiteDriver", parent=None):
+class AXI4LiteMasterDriver(uvm_driver):
+    def __init__(self, name="AXI4LiteMasterDriver", parent=None):
         super().__init__(name, parent)
 
         self.aw = Queue()
@@ -125,5 +125,150 @@ class AXI4LiteDriver(uvm_driver):
             self.seq_item_port.put_response(req)
 
             ready.value = 0
+
+    def get_axi_signal(self, name):
+        return getattr(self.vif, f"{self.vif_name}_{name}")
+
+
+class AXI4BurstSlaveDriver(uvm_driver):
+    def __init__(self, name="AXI4BurstSlaveDriver", parent=None):
+        super().__init__(name, parent)
+
+        self.aw = Queue()
+        self.ar = Queue()
+        self.w = Queue()
+        self.r = Queue()
+        self.b = Queue()
+
+    def build_phase(self):
+        self.clk = ConfigDB().get(self, "", "clk")
+        self.rst_n = ConfigDB().get(self, "", "rst_n")
+
+        self.vif = ConfigDB().get(self, "", "vif")
+        self.vif_name = ConfigDB().get(self, "", "vif_name")
+
+        self.arready = self.get_axi_signal('arready')
+        self.arvalid = self.get_axi_signal('arvalid')
+        self.araddr = self.get_axi_signal('araddr')
+        self.arprot = self.get_axi_signal('arprot')
+        self.arid = self.get_axi_signal('arid')
+        self.arlen = self.get_axi_signal('arlen')
+        self.arsize = self.get_axi_signal('arsize')
+        self.arburst = self.get_axi_signal('arburst')
+
+        self.awready = self.get_axi_signal('awready')
+        self.awvalid = self.get_axi_signal('awvalid')
+        self.awaddr = self.get_axi_signal('awaddr')
+        self.awprot = self.get_axi_signal('awprot')
+        self.awid = self.get_axi_signal('awid')
+        self.awlen = self.get_axi_signal('awlen')
+        self.awsize = self.get_axi_signal('awsize')
+        self.awburst = self.get_axi_signal('awburst')
+
+        self.wready = self.get_axi_signal('wready')
+        self.wvalid = self.get_axi_signal('wvalid')
+        self.wdata = self.get_axi_signal('wdata')
+        self.wstrb = self.get_axi_signal('wstrb')
+        self.wlast = self.get_axi_signal('wlast')
+
+        self.rready = self.get_axi_signal('rready')
+        self.rvalid = self.get_axi_signal('rvalid')
+        self.rdata = self.get_axi_signal('rdata')
+        self.rresp = self.get_axi_signal('rresp')
+        self.rid = self.get_axi_signal('rid')
+        self.rlast = self.get_axi_signal('rlast')
+
+        self.bready = self.get_axi_signal('bready')
+        self.bvalid = self.get_axi_signal('bvalid')
+        self.bresp = self.get_axi_signal('bresp')
+        self.bid = self.get_axi_signal('bid')
+
+    async def run_phase(self):
+        self.arready.value = 0
+        self.awready.value = 0
+        self.wready.value = 0
+        self.bvalid.value = 0
+        self.rvalid.value = 0
+
+        cocotb.start_soon(self.ready_main(self.ar, self.arready, self.arvalid, access_e.UVM_READ,  lambda resp: resp.ar_delays))
+        cocotb.start_soon(self.ready_main(self.aw, self.awready, self.awvalid, access_e.UVM_WRITE, lambda resp: resp.aw_delays))
+        cocotb.start_soon(self.ready_main(self.w,  self.awready, self.awvalid, access_e.UVM_WRITE, lambda resp: resp.w_delays))
+        cocotb.start_soon(self.r_main())
+        cocotb.start_soon(self.b_main())
+
+        while True:
+            resp = await self.seq_item_port.get_next_item()
+            self.seq_item_port.item_done()
+
+            if isinstance(resp, AXI4BurstReady):
+                await self.ar.put(req)
+                await self.aw.put(resp)
+                await self.w.put(resp)
+            elif req.access == access_e.UVM_WRITE:
+                await self.b.put(resp)
+            else:
+                await self.r.put(resp)
+
+    async def ready_main(self, ready_channel, ready, valid, access, get_channel_delays):
+        while True:
+            resp = await ready_channel.get()
+            assert resp.access == access
+
+            for delay in get_channel_delays(resp):
+                while True:
+                    await ReadWrite
+
+                    if self.rst_n.value and valid.value:
+                        break
+
+                    await RisingEdge(self.clk)
+
+                await ClockCycles(self.clk, delay)
+
+                ready.value = 1
+                await RisingEdge(self.clk)
+                ready.value = 0
+
+    async def r_main(self):
+        while True:
+            resp = await self.r.get()
+            assert resp.access == access_e.UVM_READ
+
+            assert len(resp.rdata) >= 0
+            assert len(resp.rdata) > 0 and len(resp.resp_delays) == len(resp.data)
+
+            for i, data in resp.rdata:
+                await ClockCycles(self.clk, resp.resp_delays[i])
+
+                self.rid.value = resp.id
+                self.rdata.value = data
+                self.rlast.value = i == len(resp.rdata) - 1
+                self.rvalid.value = 1
+
+                while True:
+                    await RisingEdge(self.clk)
+                    if self.rst_n.value and self.rready.value:
+                        break
+
+                self.rvalid.value = 0
+
+    async def b_main(self):
+        while True:
+            resp = await self.b.get()
+            assert resp.access == access_e.UVM_WRITE
+            assert len(resp.resp_delays) == 1
+
+            await ClockCycles(self.dut, resp.resp_delays[0])
+
+            self.bid.value = resp.id
+            self.bvalid.value = 1
+
+            while True:
+                await RisingEdge(self.clk)
+                if self.rst_n.value and self.bready.value:
+                    break
+
+            self.bvalid.value = 0
+
     def get_axi_signal(self, name):
         return getattr(self.vif, f"{self.vif_name}_{name}")

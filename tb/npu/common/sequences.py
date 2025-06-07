@@ -13,6 +13,7 @@ class AXI4LiteRequest(uvm_sequence_item):
         self.wdata = None
         self.wstrb = None
         self.resp = None
+        self.prot = None
 
     def do_copy(self, other):
         self.addr = other.addr
@@ -20,6 +21,52 @@ class AXI4LiteRequest(uvm_sequence_item):
         self.rdata = other.rdata
         self.wdata = other.wdata
         self.wstrb = other.wstrb
+        self.resp = other.resp
+        self.prot = other.prot
+
+
+class AXI4BurstRequest(uvm_sequence_item):
+    def __init__(self, name='AXI4BurstRequest'):
+        super().__init__(name)
+
+        self.id = None
+        self.addr = None
+        self.access = None
+        self.rdata = None
+        self.wdata = None
+        self.wstrb = None
+        self.resp = None
+        self.prot = None
+        self.size = None
+        self.burst = None
+        self.resp_delays = None
+
+    def do_copy(self, other):
+        self.id = other.id
+        self.addr = other.addr
+        self.access = other.access
+        self.rdata = other.rdata
+        self.wdata = other.wdata
+        self.wstrb = other.wstrb
+        self.resp = other.resp
+        self.prot = other.prot
+        self.size = other.size
+        self.burst = other.burst
+        self.resp_delays = other.resp_delays
+
+
+class AXI4BurstReady(uvm_sequence_item):
+    def __init__(self, name='AXI4BurstReady'):
+        super().__init__(name)
+
+        self.ar_delays = None
+        self.aw_delays = None
+        self.w_delays = None
+
+    def do_copy(self, other):
+        self.ar_delays = other.ar_delays
+        self.aw_delays = other.aw_delays
+        self.w_delays = other.w_delays
 
 
 class CSRSequence(uvm_sequence):
