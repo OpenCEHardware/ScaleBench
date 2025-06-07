@@ -56,7 +56,7 @@ class NPUScoreboard(uvm_scoreboard):
 
     async def csr_write_main(self):
         while True:
-            ar_item = await self.csr_aw_get.get()
+            aw_item = await self.csr_aw_get.get()
             w_item = await self.csr_w_get.get()
             b_item = await self.csr_b_get.get()
 
