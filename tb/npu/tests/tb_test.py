@@ -4,6 +4,7 @@ import logging
 from pyuvm import *
 from cocotb.clock import Clock
 from common.agents import *
+from common.scoreboard import *
 
 
 @pyuvm.test()
@@ -12,12 +13,20 @@ class Test(uvm_test):
 
     def build_phase(self):
         self.csr_agent = CSRAgent('csr_agent', self)
+        self.scoreboard = NPUScoreboard('scoreboard', self)
 
         self.dut = cocotb.top
 
         ConfigDB().set(None, "*", "clk", self.dut.clk_npu)
         ConfigDB().set(None, "*", "rst_n", self.dut.rst_n)
         ConfigDB().set(self.csr_agent, "*", "vif", self.dut)
+
+    def connect_phase(self):
+        self.csr_agent.mon_csr_ar.ap.connect(self.scoreboard.csr_ar_fifo.analysis_export)
+        self.csr_agent.mon_csr_aw.ap.connect(self.scoreboard.csr_aw_fifo.analysis_export)
+        self.csr_agent.mon_csr_w.ap.connect(self.scoreboard.csr_w_fifo.analysis_export)
+        self.csr_agent.mon_csr_r.ap.connect(self.scoreboard.csr_r_fifo.analysis_export)
+        self.csr_agent.mon_csr_b.ap.connect(self.scoreboard.csr_b_fifo.analysis_export)
 
     async def run_phase(self):
         self.raise_objection()

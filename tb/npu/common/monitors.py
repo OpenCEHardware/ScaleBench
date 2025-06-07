@@ -28,8 +28,7 @@ class ReadyValidMonitor(uvm_monitor):
             await RisingEdge(self.clk)
 
             if self.rst_n.value and self.ready.value and self.valid.value:
-                print(self.get_full_name(), '-', self.sample())
-                #self.ap.write(self.sample())
+                self.ap.write(self.sample())
 
     def get_vif_signal(self, signal_name):
         return getattr(self.vif, f'{self.vif_name}_{self.channel_name}{signal_name}')

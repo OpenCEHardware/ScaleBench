@@ -12,12 +12,6 @@ class CSRAgent(uvm_agent):
         super().__init__(name, parent)
 
     def build_phase(self):
-        self.ap_csr_ar = uvm_analysis_port("ap_csr_ar", self)
-        self.ap_csr_aw = uvm_analysis_port("ap_csr_aw", self)
-        self.ap_csr_w = uvm_analysis_port("ap_csr_w", self)
-        self.ap_csr_r = uvm_analysis_port("ap_csr_r", self)
-        self.ap_csr_b = uvm_analysis_port("ap_csr_b", self)
-
         self.seqr = uvm_sequencer("seqr", self)
 
         self.drvr = AXI4LiteDriver("drvr", self)
@@ -38,9 +32,3 @@ class CSRAgent(uvm_agent):
 
         self.reg_block.def_map.set_sequencer(self.seqr)
         self.reg_block.def_map.set_adapter(self.reg_adapter)
-
-        self.mon_csr_ar.ap.connect(self.ap_csr_ar)
-        self.mon_csr_aw.ap.connect(self.ap_csr_aw)
-        self.mon_csr_w.ap.connect(self.ap_csr_w)
-        self.mon_csr_r.ap.connect(self.ap_csr_r)
-        self.mon_csr_b.ap.connect(self.ap_csr_b)
