@@ -32,3 +32,25 @@ class CSRAgent(uvm_agent):
 
         self.reg_block.def_map.set_sequencer(self.seqr)
         self.reg_block.def_map.set_adapter(self.reg_adapter)
+
+
+class MemoryAgent(uvm_agent):
+    def __init__(self, name="MemoryAgent", parent=None):
+        super().__init__(name, parent)
+
+    def build_phase(self):
+        self.seqr = uvm_sequencer("seqr", self)
+
+        #self.drvr = AXI4BurstDriver("drvr", self)
+
+        self.mon_mem_ar = AXI4BurstARMonitor("mon_mem_ar", self)
+        self.mon_mem_aw = AXI4BurstAWMonitor("mon_mem_aw", self)
+        self.mon_mem_w = AXI4BurstWMonitor("mon_mem_w", self)
+        self.mon_mem_r = AXI4BurstRMonitor("mon_mem_r", self)
+        self.mon_mem_b = AXI4BurstBMonitor("mon_mem_b", self)
+
+        ConfigDB().set(self, "*", "vif_name", "mem")
+
+    def connect_phase(self):
+        pass
+        #self.drvr.seq_item_port.connect(self.seqr.seq_item_export)

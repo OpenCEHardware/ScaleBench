@@ -14,11 +14,28 @@ class AXI4Result(Enum):
 
 
 class AXI4Prot(Enum):
-    DATA_SECURE_UNPRIV    = 0
-    DATA_SECURE_PRIV      = 1
-    DATA_NONSECURE_UNPRIV = 2
-    DATA_NONSECURE_PRIV   = 3
-    CODE_SECURE_UNPRIV    = 4
-    CODE_SECURE_PRIV      = 5
-    CODE_NONSECURE_UNPRIV = 6
-    CODE_NONSECURE_PRIV   = 7
+    DATA_SECURE_UNPRIV    = 0b000
+    DATA_SECURE_PRIV      = 0b001
+    DATA_NONSECURE_UNPRIV = 0b010
+    DATA_NONSECURE_PRIV   = 0b011
+    CODE_SECURE_UNPRIV    = 0b100
+    CODE_SECURE_PRIV      = 0b101
+    CODE_NONSECURE_UNPRIV = 0b110
+    CODE_NONSECURE_PRIV   = 0b111
+
+
+class AXI4Size(Enum):
+    BYTES_1   = 0
+    BYTES_2   = 1
+    BYTES_4   = 2
+    BYTES_8   = 3
+    BYTES_16  = 4
+    BYTES_32  = 5
+    BYTES_64  = 6
+    BYTES_128 = 7
+
+
+class AXI4BurstMode(Enum):
+    FIXED = 0
+    INCR  = 1
+    WRAP  = 2

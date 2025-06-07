@@ -13,6 +13,7 @@ class Test(uvm_test):
 
     def build_phase(self):
         self.csr_agent = CSRAgent('csr_agent', self)
+        self.mem_agent = MemoryAgent('mem_agent', self)
         self.scoreboard = NPUScoreboard('scoreboard', self)
         self.mon_irq = IRQMonitor('mon_irq', self)
 
@@ -20,7 +21,7 @@ class Test(uvm_test):
 
         ConfigDB().set(None, "*", "clk", self.dut.clk_npu)
         ConfigDB().set(None, "*", "rst_n", self.dut.rst_n)
-        ConfigDB().set(self.csr_agent, "*", "vif", self.dut)
+        ConfigDB().set(None, "*", "vif", self.dut)
         ConfigDB().set(self.mon_irq, "", "irq", self.dut.irq)
 
     def connect_phase(self):
