@@ -6,5 +6,5 @@ tb_test = CocotbTestPackage('tb_test')
 
 tb_test.requires       (hs_npu)
 tb_test.top            ('hs_npu_top_flat')
-tb_test.cocotb_paths   (['./*'])
-tb_test.cocotb_modules (['tb_test'])
+tb_test.cocotb_paths   (['.'])
+tb_test.cocotb_modules (['tests.tb_test'])
