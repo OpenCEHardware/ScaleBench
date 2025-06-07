@@ -320,7 +320,7 @@ class AXI4LiteBusAdapter(uvm_reg_adapter):
 
         if rw.kind == access_e.UVM_WRITE:
             item.wdata = rw.data
-            item.wstrb = rw.byte_en
+            item.wstrb = 0b1111 # rw.byte_en
 
         item.resp = AXI4Result.OK
         if rw.status != status_t.IS_OK:

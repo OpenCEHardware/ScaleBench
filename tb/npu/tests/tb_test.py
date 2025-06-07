@@ -5,6 +5,7 @@ from pyuvm import *
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from common.env import *
+from common.sequences import *
 
 
 @pyuvm.test()
@@ -21,6 +22,9 @@ class Test(uvm_test):
         self.raise_objection()
 
         await RisingEdge(self.dut.rst_n)
+
+        mem_seq = MemorySequence(mem=self.env.mem, ar_fifo=self.env.mem_ar_fifo, aw_fifo=self.env.mem_aw_fifo, w_fifo=self.env.mem_w_fifo)
+        cocotb.start_soon(mem_seq.start(self.env.mem_agent.seqr))
 
         reg_block = self.env.csr_agent.reg_block
         resp, data = await reg_block.ARCHID.read(reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
@@ -43,7 +47,7 @@ class Test(uvm_test):
 
         await self.reg_write(reg_block.INIT, 1)
 
-        await ClockCycles(cocotb.top.clk_npu, 10)
+        await ClockCycles(cocotb.top.clk_npu, 50000)
 
         self.drop_objection()
 

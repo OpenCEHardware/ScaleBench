@@ -1,5 +1,7 @@
 import pyuvm
+import cocotb
 from pyuvm import *
+from cocotb.queue import Queue
 from common.constants import *
 
 
@@ -54,33 +56,37 @@ class AXI4BurstRequest(uvm_sequence_item):
         self.burst = other.burst
         self.resp_delays = other.resp_delays
 
+    def __str__(self):
+        if self.access == access_e.UVM_WRITE:
+            data_str = ", ".join(f"{beat:08x}" for beat in self.wdata)
+            strb_str = ", ".join(f"{beat:04b}" for beat in self.wstrb)
+            string = f"{self.get_name()} : WRITE id={self.id:02x}, addr={self.addr:08x}, wdata=[{wdata_str}], wstrb=[{wstrb_str}], prot={self.prot}, size={self.size}, burst={self.burst}"
+
+            if self.resp != None:
+                string += f", resp={self.resp}"
+        else:
+            string = f"{self.get_name()} : READ  id={self.id:02x}, addr={self.addr:08x}, prot={self.prot}, size={self.size}, burst={self.burst}"
+            if self.resp != None:
+                string += f", resp={self.resp}"
+            if self.rdata != None:
+                data_str = ", ".join(f"{beat:08x}" for beat in self.rdata)
+                string += f", rdata=[{data_str}]"
+
+        return string
+
 
 class AXI4BurstReady(uvm_sequence_item):
-    def __init__(self, name='AXI4BurstReady'):
+    def __init__(self, name='AXI4BurstReady', *, ar_delays=[], aw_delays=[], w_delays=[]):
         super().__init__(name)
 
-        self.ar_delays = None
-        self.aw_delays = None
-        self.w_delays = None
+        self.ar_delays = ar_delays
+        self.aw_delays = aw_delays
+        self.w_delays = w_delays
 
     def do_copy(self, other):
         self.ar_delays = other.ar_delays
         self.aw_delays = other.aw_delays
         self.w_delays = other.w_delays
-
-
-class CSRSequence(uvm_sequence):
-    def __init__(self, name, addr, mode=CSRMode.READ, data=None):
-        super().__init__(name)
-        self.addr = addr
-        self.data = data
-        self.mode = mode
-
-    async def body(self):
-        seq_item = CSRTransaction("seq_item", self.addr, self.mode, self.data)
-        await self.start_item(seq_item)
-        await self.finish_item(seq_item)
-        self.result = seq_item.result
 
 
 class AXI4LiteARItem(uvm_sequence_item):
@@ -213,8 +219,8 @@ class AXI4BurstWItem(uvm_sequence_item):
         return same
 
     def __str__(self):
-        data_str = ", ".join("{beat:08x}" for beat in self.data)
-        strb_str = ", ".join("{beat:04b}" for beat in self.strb)
+        data_str = ", ".join(f"{beat:08x}" for beat in self.data)
+        strb_str = ", ".join(f"{beat:04b}" for beat in self.strb)
         return f"{self.get_name()} : data=[{data_str}], strb=[{strb_str}]"
 
 
@@ -239,7 +245,7 @@ class AXI4BurstRItem(uvm_sequence_item):
         return same
 
     def __str__(self):
-        data_str = ", ".join("{beat:08x}" for beat in self.data)
+        data_str = ", ".join(f"{beat:08x}" for beat in self.data)
         return f"{self.get_name()} : id={self.id:02x}, data=[{data_str}], resp={self.resp}"
 
 
@@ -267,3 +273,70 @@ class IRQItem(uvm_sequence_item):
 
     def __str__(self):
         return f"{self.get_name()}"
+
+
+class MemorySequence(uvm_sequence):
+    def __init__(self, name="MemorySequence", *, mem, ar_fifo, aw_fifo, w_fifo, max_pending=3):
+        super().__init__(name)
+        self.mem = mem
+        self.ar_fifo = ar_fifo
+        self.aw_fifo = aw_fifo
+        self.w_fifo = w_fifo
+        self.queue = Queue()
+        self.max_pending = max_pending
+
+    async def body(self):
+        cocotb.start_soon(self.do_reads())
+        cocotb.start_soon(self.do_writes())
+
+        item = AXI4BurstReady(ar_delays=([0] * self.max_pending), aw_delays=([0] * self.max_pending), w_delays=([0] * self.max_pending))
+        await self.queue.put(item)
+
+        while True:
+            item = await self.queue.get()
+            await self.start_item(item)
+            await self.finish_item(item)
+
+    async def do_reads(self):
+        while True:
+            ar_item = await self.ar_fifo.get()
+
+            resp = AXI4BurstRequest()
+            resp.access = access_e.UVM_READ
+            resp.id = ar_item.id
+            resp.addr = ar_item.addr
+            resp.prot = ar_item.prot
+            resp.size = ar_item.size
+            resp.burst = ar_item.burst
+            resp.resp_delays = [0] * ar_item.length #TODO
+
+            result = self.mem.read_beats(ar_item.addr, ar_item.length, ar_item.size, ar_item.burst)
+            resp.rdata = [beat[0] for beat in result]
+            resp.resp = [beat[1] for beat in result]
+
+            await self.queue.put(AXI4BurstReady(ar_delays=[0]))
+            await self.queue.put(resp)
+
+    async def do_writes(self):
+        while True:
+            aw_item = await self.aw_fifo.get()
+            if aw_item.length - self.max_pending:
+                await self.queue.put(AXI4BurstReady(w_delays=([0] * (aw_item.length - self.max_pending))))
+
+            w_item = await self.w_fifo.get()
+            assert aw_item.length == len(w_item.data)
+
+            resp = AXI4BurstRequest()
+            resp.access = access_e.UVM_WRITE
+            resp.id = aw_item.id
+            resp.addr = aw_item.addr
+            resp.prot = aw_item.prot
+            resp.size = aw_item.size
+            resp.burst = aw_item.burst
+            resp.wdata = w_item.data
+            resp.wstrb = w_item.strb
+            resp.resp = self.mem.write_beats(aw_item.addr, w_item.data, w_item.strb, aw_item.size, aw_item.burst)
+            resp.resp_delays = [0] #TODO
+
+            await self.queue.put(AXI4BurstReady(aw_delays=[0], w_delays=([0] * min(aw_item.length, self.max_pending))))
+            await self.queue.put(resp)

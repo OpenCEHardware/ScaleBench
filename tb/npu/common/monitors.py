@@ -40,7 +40,7 @@ class ReadyValidMonitor(uvm_monitor):
                 continue
 
             if self.with_id:
-                id = self.id.value
+                id = int(self.id.value)
             else:
                 id = 0
 
@@ -148,12 +148,12 @@ class AXI4BurstARMonitor(ReadyValidMonitor):
 
         self.addr = self.get_vif_signal('addr')
         self.prot = self.get_vif_signal('prot')
-        self.len = self.get_vif_signal('prot')
-        self.size = self.get_vif_signal('prot')
+        self.len = self.get_vif_signal('len')
+        self.size = self.get_vif_signal('size')
         self.burst = self.get_vif_signal('burst')
 
     def sample(self, id):
-        return AXI4BurstARItem(id=id, addr=self.addr.value, prot=self.prot.value, len=self.len.value, size=self.size.value, burst=self.burst.value)
+        return AXI4BurstARItem(id=id, addr=self.addr.value, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
 
 
 class AXI4BurstAWMonitor(ReadyValidMonitor):
@@ -165,12 +165,12 @@ class AXI4BurstAWMonitor(ReadyValidMonitor):
 
         self.addr = self.get_vif_signal('addr')
         self.prot = self.get_vif_signal('prot')
-        self.len = self.get_vif_signal('prot')
-        self.size = self.get_vif_signal('prot')
+        self.len = self.get_vif_signal('len')
+        self.size = self.get_vif_signal('size')
         self.burst = self.get_vif_signal('burst')
 
     def sample(self, id):
-        return AXI4BurstAWItem(id=id, addr=self.addr.value, prot=self.prot.value, len=self.len.value, size=self.size.value, burst=self.burst.value)
+        return AXI4BurstAWItem(id=id, addr=self.addr.value, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
 
 
 class AXI4BurstWMonitor(ReadyValidMonitor):

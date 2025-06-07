@@ -4,6 +4,7 @@ from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite
 from pyuvm import *
 from common.constants import *
+from common.sequences import *
 
 
 class AXI4LiteMasterDriver(uvm_driver):
@@ -190,9 +191,9 @@ class AXI4BurstSlaveDriver(uvm_driver):
         self.bvalid.value = 0
         self.rvalid.value = 0
 
-        cocotb.start_soon(self.ready_main(self.ar, self.arready, self.arvalid, access_e.UVM_READ,  lambda resp: resp.ar_delays))
-        cocotb.start_soon(self.ready_main(self.aw, self.awready, self.awvalid, access_e.UVM_WRITE, lambda resp: resp.aw_delays))
-        cocotb.start_soon(self.ready_main(self.w,  self.awready, self.awvalid, access_e.UVM_WRITE, lambda resp: resp.w_delays))
+        cocotb.start_soon(self.ready_main(self.ar, self.arready, self.arvalid, lambda resp: resp.ar_delays))
+        cocotb.start_soon(self.ready_main(self.aw, self.awready, self.awvalid, lambda resp: resp.aw_delays))
+        cocotb.start_soon(self.ready_main(self.w,  self.awready, self.awvalid, lambda resp: resp.w_delays))
         cocotb.start_soon(self.r_main())
         cocotb.start_soon(self.b_main())
 
@@ -201,22 +202,21 @@ class AXI4BurstSlaveDriver(uvm_driver):
             self.seq_item_port.item_done()
 
             if isinstance(resp, AXI4BurstReady):
-                await self.ar.put(req)
+                await self.ar.put(resp)
                 await self.aw.put(resp)
                 await self.w.put(resp)
-            elif req.access == access_e.UVM_WRITE:
+            elif resp.access == access_e.UVM_WRITE:
                 await self.b.put(resp)
             else:
                 await self.r.put(resp)
 
-    async def ready_main(self, ready_channel, ready, valid, access, get_channel_delays):
+    async def ready_main(self, ready_channel, ready, valid, get_channel_delays):
         while True:
             resp = await ready_channel.get()
-            assert resp.access == access
 
             for delay in get_channel_delays(resp):
                 while True:
-                    await ReadWrite
+                    await ReadWrite()
 
                     if self.rst_n.value and valid.value:
                         break
@@ -235,9 +235,9 @@ class AXI4BurstSlaveDriver(uvm_driver):
             assert resp.access == access_e.UVM_READ
 
             assert len(resp.rdata) >= 0
-            assert len(resp.rdata) > 0 and len(resp.resp_delays) == len(resp.data)
+            assert len(resp.rdata) > 0 and len(resp.resp_delays) == len(resp.rdata)
 
-            for i, data in resp.rdata:
+            for i, data in enumerate(resp.rdata):
                 await ClockCycles(self.clk, resp.resp_delays[i])
 
                 self.rid.value = resp.id

@@ -23,14 +23,14 @@ class Memory:
         beat_bytes = 1 << size.value
 
         for i in range(length):
-            data = self.mem[address + beat_bytes - 1:address - 1:-1]
+            data = self.mem[address:address + beat_bytes][::-1]
             resp = AXI4Result.OK
 
             if len(data) != beat_bytes:
                 data = data.zfill(beat_bytes)
                 resp = AXI4Result.SLVERR
 
-            result.append((data, resp))
+            result.append((int.from_bytes(data), resp))
 
             match burst:
                 case AXI4BurstMode.FIXED:

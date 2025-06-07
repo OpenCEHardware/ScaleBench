@@ -14,10 +14,16 @@ class NPUEnv(uvm_env):
 
     def build_phase(self):
         self.csr_agent = CSRAgent('csr_agent', self)
-        self.mem_agent = MemoryAgent('mem_agent', self)
-        self.scoreboard = NPUScoreboard('scoreboard', self)
+
         self.mon_irq = IRQMonitor('mon_irq', self)
+
         self.mem = Memory(1024)
+        self.mem_agent = MemoryAgent('mem_agent', self)
+        self.mem_ar_fifo = uvm_tlm_analysis_fifo("mem_ar_fifo", self)
+        self.mem_aw_fifo = uvm_tlm_analysis_fifo("mem_aw_fifo", self)
+        self.mem_w_fifo = uvm_tlm_analysis_fifo("mem_w_fifo", self)
+
+        self.scoreboard = NPUScoreboard('scoreboard', self)
 
         self.dut = ConfigDB().get(self, "", "dut")
 
@@ -34,6 +40,10 @@ class NPUEnv(uvm_env):
         self.csr_agent.mon_csr_b.ap.connect(self.scoreboard.csr_b_fifo.analysis_export)
 
         self.mon_irq.ap.connect(self.scoreboard.irq_fifo.analysis_export)
+
+        self.mem_agent.mon_mem_ar.ap.connect(self.mem_ar_fifo.analysis_export)
+        self.mem_agent.mon_mem_aw.ap.connect(self.mem_aw_fifo.analysis_export)
+        self.mem_agent.mon_mem_w.ap.connect(self.mem_w_fifo.analysis_export)
 
     async def run_phase(self):
         cocotb.start_soon(Clock(cocotb.top.clk_npu, 2).start())
