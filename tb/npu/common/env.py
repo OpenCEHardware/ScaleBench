@@ -39,11 +39,17 @@ class NPUEnv(uvm_env):
         self.csr_agent.mon_csr_r.ap.connect(self.scoreboard.csr_r_fifo.analysis_export)
         self.csr_agent.mon_csr_b.ap.connect(self.scoreboard.csr_b_fifo.analysis_export)
 
-        self.mon_irq.ap.connect(self.scoreboard.irq_fifo.analysis_export)
+        self.mem_agent.mon_mem_ar.ap.connect(self.scoreboard.mem_ar_fifo.analysis_export)
+        self.mem_agent.mon_mem_aw.ap.connect(self.scoreboard.mem_aw_fifo.analysis_export)
+        self.mem_agent.mon_mem_w.ap.connect(self.scoreboard.mem_w_fifo.analysis_export)
+        self.mem_agent.mon_mem_r.ap.connect(self.scoreboard.mem_r_fifo.analysis_export)
+        self.mem_agent.mon_mem_b.ap.connect(self.scoreboard.mem_b_fifo.analysis_export)
 
         self.mem_agent.mon_mem_ar.ap.connect(self.mem_ar_fifo.analysis_export)
         self.mem_agent.mon_mem_aw.ap.connect(self.mem_aw_fifo.analysis_export)
         self.mem_agent.mon_mem_w.ap.connect(self.mem_w_fifo.analysis_export)
+
+        self.mon_irq.ap.connect(self.scoreboard.irq_fifo.analysis_export)
 
     async def run_phase(self):
         cocotb.start_soon(Clock(cocotb.top.clk_npu, 2).start())

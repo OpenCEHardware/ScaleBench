@@ -5,13 +5,21 @@ from common.sequences import *
 
 
 class NPUModel:
-    def csr_read(self, request):
+    def csr_read(self, req):
         #TODO
         return AXI4LiteRItem(data=0xffffffff, resp=AXI4Result.SLVERR)
 
-    def csr_write(self, request, data):
+    def csr_write(self, req, data):
         #TODO
         return AXI4LiteBItem(resp=AXI4Result.SLVERR)
+
+    def mem_read(self, req):
+        #TODO
+        return AXI4BurstRItem(id=0x69, data=([0xffffffff] * req.length), resp=([AXI4Result.SLVERR] * req.length))
+
+    def mem_write(self, req, data):
+        #TODO
+        return AXI4BurstBItem(id=0x69, resp=([AXI4Result.SLVERR] * req.length))
 
 
 class Memory:
