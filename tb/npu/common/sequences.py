@@ -253,7 +253,7 @@ class AXI4BurstBItem(uvm_sequence_item):
     def __init__(self, *, id, resp, name='AXI4BurstBItem'):
         super().__init__(name)
         self.id = int(id)
-        self.resp = AXI4Result(resp)
+        self.resp = [AXI4Result(beat) for beat in resp] if isinstance(resp, list) else AXI4Result(resp)
 
     def __eq__(self, other):
         same = self.id == other.id and self.resp == other.resp

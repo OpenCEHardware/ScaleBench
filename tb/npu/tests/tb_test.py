@@ -37,7 +37,7 @@ class Test(uvm_test):
         await self.reg_write(reg_block.REINPUTS, 0)
         await self.reg_write(reg_block.REWEIGHTS, 0)
         await self.reg_write(reg_block.SAVEOUT, 1)
-        await self.reg_write(reg_block.USEBIAS, 0)
+        await self.reg_write(reg_block.USEBIAS, 1)
         await self.reg_write(reg_block.USESUMM, 0)
         await self.reg_write(reg_block.SHIFTAMT, 0)
         await self.reg_write(reg_block.ACTFN, 0)
@@ -47,7 +47,7 @@ class Test(uvm_test):
 
         await self.reg_write(reg_block.INIT, 1)
 
-        await ClockCycles(cocotb.top.clk_npu, 50000)
+        await ClockCycles(cocotb.top.clk_npu, 1000)
 
         self.drop_objection()
 

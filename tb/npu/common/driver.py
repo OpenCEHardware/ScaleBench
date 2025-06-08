@@ -193,7 +193,7 @@ class AXI4BurstSlaveDriver(uvm_driver):
 
         cocotb.start_soon(self.ready_main(self.ar, self.arready, self.arvalid, lambda resp: resp.ar_delays))
         cocotb.start_soon(self.ready_main(self.aw, self.awready, self.awvalid, lambda resp: resp.aw_delays))
-        cocotb.start_soon(self.ready_main(self.w,  self.awready, self.awvalid, lambda resp: resp.w_delays))
+        cocotb.start_soon(self.ready_main(self.w,  self.wready,  self. wvalid, lambda resp: resp.w_delays))
         cocotb.start_soon(self.r_main())
         cocotb.start_soon(self.b_main())
 
@@ -258,7 +258,7 @@ class AXI4BurstSlaveDriver(uvm_driver):
             assert resp.access == access_e.UVM_WRITE
             assert len(resp.resp_delays) == 1
 
-            await ClockCycles(self.dut, resp.resp_delays[0])
+            await ClockCycles(self.clk, resp.resp_delays[0])
 
             self.bid.value = resp.id
             self.bvalid.value = 1

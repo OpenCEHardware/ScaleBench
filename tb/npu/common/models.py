@@ -50,19 +50,28 @@ class Memory:
 
         return result
 
-    def write_beats(self, address, data, size=AXI4Size.BYTES_4, burst=AXI4BurstMode.INCR):
+    def write_beats(self, address, beats, strobes, size=AXI4Size.BYTES_4, burst=AXI4BurstMode.INCR):
         result = []
         beat_bytes = 1 << size.value
 
-        for data in range(resp):
+        assert len(beats) == len(strobes)
+
+        for i, data in enumerate(beats):
             if isinstance(data, int):
                 data = data.to_bytes(beat_bytes)
 
+            strobe = strobes[i]
+
             assert isinstance(data, (bytearray, bytes))
+            assert isinstance(strobe, int) and not (strobe & ~((1 << beat_bytes) - 1))
+
+            old = self.mem[address:address + beat_bytes][::-1].zfill(beat_bytes)
+            data = data.zfill(beat_bytes)
+            data = bytes(data[i] if strobe & (1 << i) else old[i] for i in range(beat_bytes))
 
             resp = AXI4Result.OK
             try:
-                self.mem[address + beat_bytes - 1:address - 1:-1] = data
+                self.mem[address:address + beat_bytes] = data[::-1]
             except ValueError:
                 resp = AXI4Result.SLVERR
 

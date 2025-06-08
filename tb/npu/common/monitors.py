@@ -47,11 +47,11 @@ class ReadyValidMonitor(uvm_monitor):
             item = self.sample(id)
 
             if self.with_burst:
+                samples = self.id_bursts.setdefault(id, [])
+                samples.append(item)
+
                 last = self.last.value
                 if last:
-                    samples = self.id_bursts.setdefault(id, [])
-                    samples.append(item)
-
                     item = self.sample_burst(id, samples)
                     samples.clear()
             else:
@@ -187,7 +187,7 @@ class AXI4BurstWMonitor(ReadyValidMonitor):
         return (self.data.value, self.strb.value)
 
     def sample_burst(self, id, samples):
-        return AXI4BurstWItem(id=id, data=[sample[0] for sample in samples], strb=[sample[1] for sample in samples])
+        return AXI4BurstWItem(data=[sample[0] for sample in samples], strb=[sample[1] for sample in samples])
 
 
 class AXI4BurstRMonitor(ReadyValidMonitor):
