@@ -8,6 +8,14 @@ from common.env import *
 from common.sequences import *
 
 
+def generate_random_matrix(rows, cols, min_val=0, max_val=255):
+    matrix = []
+    for _ in range(rows):
+        row = [random.randint(min_val, max_val) for _ in range(cols)]
+        matrix.extend(row)
+    return matrix
+
+
 @pyuvm.test()
 class Test(uvm_test):
     """Simple test for ScaleNPU"""
@@ -27,8 +35,18 @@ class Test(uvm_test):
         cocotb.start_soon(mem_seq.start(self.env.mem_agent.seqr))
 
         reg_block = self.env.csr_agent.reg_block
-        resp, data = await reg_block.ARCHID.read(reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
-        assert (resp, data) == (status_t.IS_OK, 0xb00b)
+
+        data = await self.reg_read(reg_block.ARCHID)
+
+        self.env.mem.write_mem(0x0000_0000, 2)
+        self.env.mem.write_mem(0x0000_0002, 2)
+        self.env.mem.write_mem(0x0000_0004, 2)
+        self.env.mem.write_mem(0x0000_0006, 2)
+
+        self.env.mem.write_mem(0x0000_0008, 2)
+        self.env.mem.write_mem(0x0000_0010, 2)
+        self.env.mem.write_mem(0x0000_0012, 2)
+        self.env.mem.write_mem(0x0000_0014, 2)
 
         await self.reg_write(reg_block.INROWS, 2)
         await self.reg_write(reg_block.INCOLS, 2)
@@ -45,6 +63,10 @@ class Test(uvm_test):
         await self.reg_write(reg_block.BASE,   0x0000_0000)
         await self.reg_write(reg_block.RESULT, 0x0000_0100)
 
+        await self.reg_read(reg_block.INROWS)
+        await self.reg_read(reg_block.INCOLS)
+        await self.reg_read(reg_block.WGHTROWS)
+
         await self.reg_write(reg_block.INIT, 1)
 
         await ClockCycles(cocotb.top.clk_npu, 1000)
@@ -54,3 +76,10 @@ class Test(uvm_test):
     async def reg_write(self, reg, value):
         resp = await reg.write(value, self.env.csr_agent.reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
         assert resp == status_t.IS_OK
+    
+    async def reg_read(self, reg):
+        resp, data = await reg.read(self.env.csr_agent.reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
+
+        assert resp == status_t.IS_OK
+
+        return data

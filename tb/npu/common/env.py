@@ -7,7 +7,6 @@ from common.agents import *
 from common.scoreboard import *
 from common.models import *
 
-
 class NPUEnv(uvm_env):
     def __init__(self, name="NPUEnv", parent=None):
         super().__init__(name, parent)
@@ -31,6 +30,7 @@ class NPUEnv(uvm_env):
         ConfigDB().set(self, "*", "rst_n", self.dut.rst_n)
         ConfigDB().set(self, "*", "vif", self.dut)
         ConfigDB().set(self.mon_irq, "", "irq", self.dut.irq)
+        ConfigDB().set(None, "", "mem", self.mem)
 
     def connect_phase(self):
         self.csr_agent.mon_csr_ar.ap.connect(self.scoreboard.csr_ar_fifo.analysis_export)

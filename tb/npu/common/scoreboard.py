@@ -10,7 +10,9 @@ class NPUScoreboard(uvm_scoreboard):
         super().__init__(name, parent)
 
     def build_phase(self):
-        self.model = NPUModel()
+        mem = ConfigDB().get(None, "", "mem")
+
+        self.model = NPUModel(mem)
 
         self.csr_ar_fifo = uvm_tlm_analysis_fifo("csr_ar_fifo", self)
         self.csr_aw_fifo = uvm_tlm_analysis_fifo("csr_aw_fifo", self)
@@ -44,6 +46,10 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  request:  {ar_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {r_item}")
+            else:
+                self.logger.info(f"CSR read executed correctly")
+                self.logger.info(f"|  request:  {ar_item}")
+                self.logger.info(f"|__data:   {r_item}")
 
     async def csr_write_main(self):
         while True:
@@ -58,6 +64,10 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  data:     {w_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {b_item}")
+            else:
+                self.logger.info(f"CSR write executed correctly")
+                self.logger.info(f"|  request:  {aw_item}")
+                self.logger.info(f"|__data:     {w_item}")
 
     async def mem_read_main(self):
         while True:
@@ -70,6 +80,10 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  request:  {ar_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {r_item}")
+            else:
+                self.logger.info(f"Mem read executed correctly")
+                self.logger.info(f"|  request:  {ar_item}")
+                self.logger.info(f"|__data:     {r_item}")
 
     async def mem_write_main(self):
         while True:

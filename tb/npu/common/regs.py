@@ -315,7 +315,7 @@ class AXI4LiteBusAdapter(uvm_reg_adapter):
         item = AXI4LiteRequest("item")
 
         item.addr = int(rw.addr, 16)
-        item.prot = AXI4Prot.DATA_SECURE_PRIV #TODO
+        item.prot = AXI4Prot.DATA_SECURE_PRIV #TODO: Available in case ScaleNPU implements this feature.
         item.access = rw.kind
 
         if rw.kind == access_e.UVM_WRITE:
