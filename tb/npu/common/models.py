@@ -52,11 +52,11 @@ class NPUModel:
 
             addr = int(self.registers[0x34])
 
-            self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=16, signed=True)
-            addr += self.weight_rows * self.weight_cols * 2
+            self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=8, signed=True)
+            addr += self.weight_rows * self.weight_cols * 1
 
-            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=16, signed=True)
-            addr += self.input_rows * self.input_cols * 2
+            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=8, signed=True)
+            addr += self.input_rows * self.input_cols * 1
 
             if int(self.registers[0x24]) & 1: #USEBIAS
                 self.bias = self.mem.read_mem(addr, length=self.input_cols, data_width=32, signed=True)

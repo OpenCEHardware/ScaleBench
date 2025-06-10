@@ -80,6 +80,8 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"Bad result")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {actual}")
+            else:
+                self.logger.info(f"Correct result: {actual}")
 
     def check_phase(self):
         self.check_fifo(self.csr_ar_fifo, "csr_ar_fifo")
