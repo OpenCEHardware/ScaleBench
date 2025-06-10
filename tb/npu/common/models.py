@@ -23,7 +23,8 @@ class NPUModel:
         0x30: "",  # ACT_FN_REG_ADDR
         0x34: "",  # BASE_MEMADDR_REG_ADDR
         0x38: "",  # RESULT_MEMADDR_REG_ADDR
-        0x3C: "",  # MAINCTRL_INIT_REG_ADDR
+        0x3C: "",  # INIT_REG_ADDR
+        0x40: "",  # IRQ_REG_ADDR
         0x40: "",  # EXIT_CODE_REG_ADDR
     }
 
@@ -40,14 +41,59 @@ class NPUModel:
 
     def csr_write(self, req, data):
         self.registers[req.addr] = data.data
+
+        # init
+        if req.addr == 0x3C and (data.data & 1):
+            self.shift = int(self.registers[0x2c])
+            self.input_rows = int(self.registers[0x08])
+            self.input_cols = int(self.registers[0x0c])
+            self.weight_rows = int(self.registers[0x10])
+            self.weight_cols = int(self.registers[0x14])
+
+            addr = int(self.registers[0x34])
+
+            self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=16, signed=True)
+            addr += self.weight_rows * self.weight_cols * 2
+
+            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=16, signed=True)
+            addr += self.input_rows * self.input_cols * 2
+
+            if int(self.registers[0x24]) & 1: #USEBIAS
+                self.bias = self.mem.read_mem(addr, length=self.input_cols, data_width=32, signed=True)
+                addr += self.input_cols * 4
+            else:
+                self.bias = [0] * self.input_cols
+
+            if int(self.registers[0x28]) & 1: #USESUMM
+                self.summ = self.mem.read_mem(addr, length=self.input_cols, data_width=32, signed=True)
+            else:
+                self.summ = [0] * self.input_cols
+
         return AXI4LiteBItem(resp=AXI4Result.OK)
 
-    def mem_read(self, req):
-        return AXI4BurstRItem(id=0x69, data=([0xffffffff] * req.length), resp=([AXI4Result.SLVERR] * req.length))
+    def get_result_address(self):
+        return int(self.registers[0x38])
 
-    def mem_write(self, req, data):
-        #TODO
-        return AXI4BurstBItem(id=0x69, resp=([AXI4Result.SLVERR] * req.length))
+    def get_result_length(self):
+        return int(self.weight_rows * self.input_cols)
+
+    def predict_result(self):
+        matrix = []
+        for row in range(self.weight_rows):
+            for col in range(self.input_cols):
+                product = self.bias[col] + self.summ[col]
+
+                # weight_cols == input_rows
+                for i in range(self.input_rows):
+                    product += self.weights[row * self.weight_cols + i] * self.inputs[i * self.input_cols + col]
+
+                if product < 0:
+                    product = 0
+
+                product >>= self.shift
+                matrix.append(product & 0xffffffff)
+
+        return matrix
 
 
 class Memory:
@@ -124,6 +170,15 @@ class Memory:
             data = (data,)
         self.mem[addr:addr + (data_width // 8) * len(data)] = b''.join(val.to_bytes((data_width // 8), 'little') for val in data)
 
-    def read_mem(self, addr, length=1, data_width=16):
+    def read_mem(self, addr, length=1, data_width=16, signed=False):
         assert not (addr & ((data_width // 8) - 1))
-        return [int.from_bytes(self.mem[addr + (data_width // 8) * i:addr + (data_width // 8) * (i + 1)], 'little') for i in range(length)]
+
+        data = []
+        for i in range(length):
+            read = int.from_bytes(self.mem[addr + (data_width // 8) * i:addr + (data_width // 8) * (i + 1)], 'little')
+            if signed and (read & (1 << (data_width - 1))):
+                read -= 1 << data_width
+
+            data.append(read)
+
+        return data

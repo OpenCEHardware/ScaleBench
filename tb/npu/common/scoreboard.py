@@ -12,6 +12,7 @@ class NPUScoreboard(uvm_scoreboard):
     def build_phase(self):
         mem = ConfigDB().get(None, "", "mem")
 
+        self.mem = mem
         self.model = NPUModel(mem)
 
         self.csr_ar_fifo = uvm_tlm_analysis_fifo("csr_ar_fifo", self)
@@ -31,8 +32,6 @@ class NPUScoreboard(uvm_scoreboard):
     async def run_phase(self):
         cocotb.start_soon(self.csr_read_main())
         cocotb.start_soon(self.csr_write_main())
-        cocotb.start_soon(self.mem_read_main())
-        cocotb.start_soon(self.mem_write_main())
         cocotb.start_soon(self.irq_main())
 
     async def csr_read_main(self):
@@ -69,40 +68,18 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.info(f"|  request:  {aw_item}")
                 self.logger.info(f"|__data:     {w_item}")
 
-    async def mem_read_main(self):
-        while True:
-            ar_item = await self.mem_ar_fifo.get()
-            r_item = await self.mem_r_fifo.get()
-
-            expected = self.model.mem_read(ar_item)
-            if expected != r_item:
-                self.logger.error(f"Mem read response mismatch")
-                self.logger.error(f"|  request:  {ar_item}")
-                self.logger.error(f"|  expected: {expected}")
-                self.logger.error(f"|__actual:   {r_item}")
-            else:
-                self.logger.info(f"Mem read executed correctly")
-                self.logger.info(f"|  request:  {ar_item}")
-                self.logger.info(f"|__data:     {r_item}")
-
-    async def mem_write_main(self):
-        while True:
-            aw_item = await self.mem_aw_fifo.get()
-            w_item = await self.mem_w_fifo.get()
-            b_item = await self.mem_b_fifo.get()
-
-            expected = self.model.mem_write(aw_item, w_item)
-            if expected != b_item:
-                self.logger.error(f"Mem write response mismatch")
-                self.logger.error(f"|  request:  {aw_item}")
-                self.logger.error(f"|  data:     {w_item}")
-                self.logger.error(f"|  expected: {expected}")
-                self.logger.error(f"|__actual:   {b_item}")
-
     async def irq_main(self):
         while True:
             irq_item = await self.irq_fifo.get()
-            self.logger.error(f"unexpected interrupt: {irq_item}")
+            self.logger.info(f"Interrupt: {irq_item}")
+
+            actual = self.mem.read_mem(self.model.get_result_address(), length=self.model.get_result_length(), data_width=32)
+            expected = self.model.predict_result()
+
+            if actual != expected:
+                self.logger.error(f"Bad result")
+                self.logger.error(f"|  expected: {expected}")
+                self.logger.error(f"|__actual:   {actual}")
 
     def check_phase(self):
         self.check_fifo(self.csr_ar_fifo, "csr_ar_fifo")
