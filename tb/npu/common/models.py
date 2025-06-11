@@ -1,6 +1,5 @@
 import pyuvm
 import cocotb
-from math import log2
 from pyuvm import *
 from common.sequences import *
 
@@ -10,22 +9,22 @@ class NPUModel:
     registers = {
         0x00: 0xB00B,  # ARCHID_REG_ADDR
         0x04: 0x100,  # IMPID_REG_ADDR
-        0x08: "",  # NUM_ROWS_INPUT_REG_ADDR
-        0x0C: "",  # NUM_COLS_INPUT_REG_ADDR
-        0x10: "",  # NUM_ROWS_WEIGHT_REG_ADDR
-        0x14: "",  # NUM_COLS_WEIGHT_REG_ADDR
-        0x18: "",  # REINPUT_REG_ADDR
-        0x1C: "",  # REWEIGHT_REG_ADDR
-        0x20: "",  # SAVEOUT_REG_ADDR
-        0x24: "",  # USE_BIAS_REG_ADDR
-        0x28: "",  # USE_SUMM_REG_ADDR
-        0x2C: "",  # SHIFT_AMT_REG_ADDR
-        0x30: "",  # ACT_FN_REG_ADDR
-        0x34: "",  # BASE_MEMADDR_REG_ADDR
-        0x38: "",  # RESULT_MEMADDR_REG_ADDR
-        0x3C: "",  # INIT_REG_ADDR
-        0x40: "",  # IRQ_REG_ADDR
-        0x40: "",  # EXIT_CODE_REG_ADDR
+        0x08: 0x0,  # NUM_ROWS_INPUT_REG_ADDR
+        0x0C: 0x0,  # NUM_COLS_INPUT_REG_ADDR
+        0x10: 0x0,  # NUM_ROWS_WEIGHT_REG_ADDR
+        0x14: 0x0,  # NUM_COLS_WEIGHT_REG_ADDR
+        0x18: 0x0,  # REINPUT_REG_ADDR
+        0x1C: 0x0,  # REWEIGHT_REG_ADDR
+        0x20: 0x0,  # SAVEOUT_REG_ADDR
+        0x24: 0x0,  # USE_BIAS_REG_ADDR
+        0x28: 0x0,  # USE_SUMM_REG_ADDR
+        0x2C: 0x0,  # SHIFT_AMT_REG_ADDR
+        0x30: 0x0,  # ACT_FN_REG_ADDR
+        0x34: 0x0,  # BASE_MEMADDR_REG_ADDR
+        0x38: 0x0,  # RESULT_MEMADDR_REG_ADDR
+        0x3C: 0x0,  # INIT_REG_ADDR
+        0x40: 0x0,  # IRQ_REG_ADDR
+        0x40: 0x0,  # EXIT_CODE_REG_ADDR
     }
 
     def __init__(self, mem):
@@ -34,7 +33,7 @@ class NPUModel:
     def csr_read(self, req):
         data = self.registers.get(req.addr)
 
-        if data is None:
+        if not data:
             return AXI4LiteRItem(data=0x00000000, resp=AXI4Result.SLVERR)
         
         return AXI4LiteRItem(data=data, resp=AXI4Result.OK)
@@ -54,6 +53,8 @@ class NPUModel:
 
             self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=8, signed=True)
             addr += self.weight_rows * self.weight_cols * 1
+
+            self.weights = [self.weights[(self.weight_rows - i - 1) * self.weight_cols + j] for i in range(self.weight_rows) for j in range(self.weight_cols)]
 
             self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=8, signed=True)
             addr += self.input_rows * self.input_cols * 1
@@ -78,17 +79,19 @@ class NPUModel:
         return int(self.weight_rows * self.input_cols)
 
     def predict_result(self):
+        assert self.input_cols == self.weight_rows
+
         matrix = []
-        for row in range(self.weight_rows):
-            for col in range(self.input_cols):
+        for row in range(self.input_rows):
+            for col in range(self.weight_cols):
                 product = self.bias[col] + self.summ[col]
 
-                # weight_cols == input_rows
-                for i in range(self.input_rows):
-                    product += self.weights[row * self.weight_cols + i] * self.inputs[i * self.input_cols + col]
+                for i in range(self.weight_rows):
+                    product += self.inputs[row * self.input_cols + i] * self.weights[i * self.weight_cols + col]
 
-                if product < 0:
-                    product = 0
+                if self.registers[0x30]:
+                    if product < 0:
+                        product = 0
 
                 product >>= self.shift
                 matrix.append(product & 0xffffffff)
@@ -161,16 +164,16 @@ class Memory:
 
         return result
     
-    # Default data width is set to 16 bits, according to the current DUT configuration for INPUT_DATA_WIDTH.
+    # Default data width is set to 8 bits, according to the current DUT configuration for INPUT_DATA_WIDTH.
     # Modify data_width here if the DUT configuration is updated.
     # Reference: https://opencehardware.github.io/ScaleNPU/block/configuration/#parameters
-    def write_mem(self, addr, data, data_width=16):
+    def write_mem(self, addr, data, data_width=8):
         assert not (addr & ((data_width // 8) - 1))
         if isinstance(data, int):
             data = (data,)
         self.mem[addr:addr + (data_width // 8) * len(data)] = b''.join(val.to_bytes((data_width // 8), 'little') for val in data)
 
-    def read_mem(self, addr, length=1, data_width=16, signed=False):
+    def read_mem(self, addr, length=1, data_width=8, signed=False):
         assert not (addr & ((data_width // 8) - 1))
 
         data = []
@@ -182,3 +185,9 @@ class Memory:
             data.append(read)
 
         return data
+
+    def write_weight(self, base, i, j, data, weight_rows, weight_cols):
+        self.write_mem(base + (weight_rows - i - 1) * weight_cols + j, data)
+
+    def write_input(self, base, i, j, data, weight_rows, weight_cols, input_cols):
+        self.write_mem(base + weight_rows * weight_cols + i * input_cols + j, data)

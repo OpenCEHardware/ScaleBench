@@ -1,20 +1,12 @@
 import cocotb
 import pyuvm
 import logging
+import random
 from pyuvm import *
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 from common.env import *
 from common.sequences import *
-
-
-def generate_random_matrix(rows, cols, min_val=0, max_val=255):
-    matrix = []
-    for _ in range(rows):
-        row = [random.randint(min_val, max_val) for _ in range(cols)]
-        matrix.extend(row)
-    return matrix
-
 
 @pyuvm.test()
 class Test(uvm_test):
@@ -38,26 +30,42 @@ class Test(uvm_test):
 
         data = await self.reg_read(reg_block.ARCHID)
 
-        self.env.mem.write_mem(0x0000_0000, 200)
-        self.env.mem.write_mem(0x0000_0002, 200)
-        self.env.mem.write_mem(0x0000_0004, 200)
-        self.env.mem.write_mem(0x0000_0006, 200)
+        base = 0x0000_0000
+        input_cols = 8
+        input_rows = 8
+        weight_cols = 8
+        weight_rows = 8
 
-        self.env.mem.write_mem(0x0000_0088, 200)
-        self.env.mem.write_mem(0x0000_008c, 200)
-        self.env.mem.write_mem(0x0000_0090, 200)
-        self.env.mem.write_mem(0x0000_0094, 200)
+        def generate_random_weights_matrix(rows, cols, min_val=0, max_val=255):
+            for i in range(rows):
+                for j in range(cols):
+                    data = random.randint(min_val, max_val)
+                    self.logger.info(f"WEIGTHS[{i}][{j}]: {data}")
+                    self.env.mem.write_weight(base, i, j, data, weight_rows, weight_cols)
+        
 
-        await self.reg_write(reg_block.INROWS, 8)
-        await self.reg_write(reg_block.INCOLS, 8)
-        await self.reg_write(reg_block.WGHTROWS, 8)
-        await self.reg_write(reg_block.WGHTCOLS, 8)
+        def generate_random_input_matrix(rows, cols, min_val=0, max_val=255):
+            for i in range(rows):
+                for j in range(cols):
+                    data = random.randint(min_val, max_val)
+                    self.logger.info(f"INPUTS[{i}][{j}]: {data}")
+                    self.env.mem.write_input(base, i, j, data, weight_rows, weight_cols, input_cols)
+
+        generate_random_weights_matrix(8, 8, max_val=69)
+        generate_random_input_matrix(8, 8, max_val=69)
+
+
+
+        await self.reg_write(reg_block.INROWS, input_rows)
+        await self.reg_write(reg_block.INCOLS, input_cols)
+        await self.reg_write(reg_block.WGHTROWS, weight_rows)
+        await self.reg_write(reg_block.WGHTCOLS, weight_cols)
         await self.reg_write(reg_block.REINPUTS, 0)
         await self.reg_write(reg_block.REWEIGHTS, 0)
         await self.reg_write(reg_block.SAVEOUT, 1)
         await self.reg_write(reg_block.USEBIAS, 1)
         await self.reg_write(reg_block.USESUMM, 1)
-        await self.reg_write(reg_block.SHIFTAMT, 3)
+        await self.reg_write(reg_block.SHIFTAMT, 0)
         await self.reg_write(reg_block.ACTFN, 1)
 
         await self.reg_write(reg_block.BASE,   0x0000_0000)

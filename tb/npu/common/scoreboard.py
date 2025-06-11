@@ -46,7 +46,7 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {r_item}")
             else:
-                self.logger.info(f"CSR read executed correctly")
+                self.logger.debug(f"CSR read executed correctly")
                 self.logger.info(f"|  request:  {ar_item}")
                 self.logger.info(f"|__data:   {r_item}")
 
