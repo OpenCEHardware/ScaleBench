@@ -17,26 +17,15 @@ class SimpleTest(uvm_test):
 
     def end_of_elaboration_phase(self):
         self.custom_query = CustomQuerySeq.create("custom_query") 
-        self.reg_block = ConfigDB().get(None, "", "reg_block")
 
     async def run_phase(self):
         self.raise_objection()
 
         csr_item = CSRSeqItem("csr_item")
 
-        csr_item.add_operation(self.reg_block.INROWS, CSRMode.WRITE, 8)
-        csr_item.add_operation(self.reg_block.INCOLS, CSRMode.WRITE, 8)
-        csr_item.add_operation(self.reg_block.WGHTROWS, CSRMode.WRITE, 8)
-        csr_item.add_operation(self.reg_block.WGHTCOLS, CSRMode.WRITE, 8)
-        csr_item.add_operation(self.reg_block.REINPUTS, CSRMode.WRITE, 0)
-        csr_item.add_operation(self.reg_block.SAVEOUT, CSRMode.WRITE, 1)
-        csr_item.add_operation(self.reg_block.USEBIAS, CSRMode.WRITE, 1)
-        csr_item.add_operation(self.reg_block.USESUMM, CSRMode.WRITE, 1)
-        csr_item.add_operation(self.reg_block.SHIFTAMT, CSRMode.WRITE, 0)
-        csr_item.add_operation(self.reg_block.ACTFN, CSRMode.WRITE, 1)
+        csr_item.matrix_setup(8, 8, 8, 8, 0x0, 0x100)
 
-        csr_item.add_operation(self.reg_block.BASE, CSRMode.WRITE, 0x0000_0000)
-        csr_item.add_operation(self.reg_block.RESULT, CSRMode.WRITE, 0x0000_0100)
+        csr_item.features_setup()
 
         weigths = [39, 12, 14, 6, 41, 9, 43, 33, 4, 24, 17, 42, 27, 32, 5, 15, 11, 49, 34, 27, 13, 9, 7, 20, 37, 28, 40, 20, 18, 19, 17, 20, 29, 4, 45, 19, 4, 16, 5, 23, 36, 8, 13, 38, 13, 47, 25, 27, 26, 34, 6, 47, 16, 33, 2, 13, 12, 8, 1, 24, 28, 4, 47, 50]
 

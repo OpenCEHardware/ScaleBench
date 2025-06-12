@@ -277,6 +277,7 @@ class CSRSeqItem(uvm_sequence_item):
     def __init__(self, name):
         super().__init__(name)
         self.operations = []
+        self.reg_block = ConfigDB().get(None, "", "reg_block")
 
     def add_operation(self, register, mode, value=0x0):
 
@@ -295,6 +296,27 @@ class CSRSeqItem(uvm_sequence_item):
     def __str__(self):
         return f"{self.name}:\n" + "\n".join(f"REG:{reg}, MODE:{mode}, VALUE:{value}" 
                                             for reg, mode, value in self.operations)
+
+    def matrix_setup(self, inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr):
+
+        assert all(isinstance(x, int) for x in [inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr]), \
+        "All parameters must be integers"
+
+        self.add_operation(self.reg_block.INROWS, CSRMode.WRITE, inputs_rows)
+        self.add_operation(self.reg_block.INCOLS, CSRMode.WRITE, inputs_cols)
+        self.add_operation(self.reg_block.WGHTROWS, CSRMode.WRITE, weights_rows)
+        self.add_operation(self.reg_block.WGHTCOLS, CSRMode.WRITE, weights_cols)
+
+        self.add_operation(self.reg_block.BASE, CSRMode.WRITE, base_addr)
+        self.add_operation(self.reg_block.RESULT, CSRMode.WRITE, result_addr)
+
+    def features_setup(self, reinputs=False, saveout=True, usebias=True, usesumm=True, shift_amount=0, activation_function=False):
+        self.add_operation(self.reg_block.REINPUTS, CSRMode.WRITE, int(reinputs))
+        self.add_operation(self.reg_block.SAVEOUT, CSRMode.WRITE, int(saveout))
+        self.add_operation(self.reg_block.USEBIAS, CSRMode.WRITE, int(usebias))
+        self.add_operation(self.reg_block.USESUMM, CSRMode.WRITE, int(usesumm))
+        self.add_operation(self.reg_block.SHIFTAMT, CSRMode.WRITE, shift_amount)
+        self.add_operation(self.reg_block.ACTFN, CSRMode.WRITE, int(activation_function))
 
 
 class MemSeqItem(uvm_sequence_item):

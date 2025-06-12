@@ -25,7 +25,7 @@ class NPUModel:
         0x38: 0x0,  # RESULT_MEMADDR_REG_ADDR
         0x3C: 0x0,  # INIT_REG_ADDR
         0x40: 0x0,  # IRQ_REG_ADDR
-        0x40: 0x0,  # EXIT_CODE_REG_ADDR
+        0x44: 0x0,  # EXIT_CODE_REG_ADDR
     }
 
     def __init__(self, mem):
