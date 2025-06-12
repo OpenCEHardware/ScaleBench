@@ -84,7 +84,7 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
     async def body(self):
         raise UVMNotImplemented
 
-    async def execute_multiplication(self, mem_item, csr_item):
+    async def execute_query(self, mem_item, csr_item):
 
         await RisingEdge(self.dut.rst_n)
 
@@ -171,4 +171,4 @@ class CustomQuerySeq(NPUBaseSequence):
         assert isinstance(self.csr_item, CSRSeqItem)
         assert isinstance(self.mem_item, MemSeqItem)
 
-        await self.execute_multiplication(self.mem_item, self.csr_item)
+        await self.execute_query(self.mem_item, self.csr_item)
