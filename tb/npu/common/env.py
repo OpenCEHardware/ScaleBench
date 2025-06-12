@@ -8,7 +8,8 @@ from common.scoreboard import *
 from common.models import *
 
 class NPUEnv(uvm_env):
-    def __init__(self, name="NPUEnv", parent=None):
+    def __init__(self, name="NPUEnv", parent=None, mem_size=1024):
+        self.mem_size = mem_size
         super().__init__(name, parent)
 
     def build_phase(self):
@@ -16,7 +17,7 @@ class NPUEnv(uvm_env):
 
         self.mon_irq = IRQMonitor('mon_irq', self)
 
-        self.mem = Memory(1024)
+        self.mem = Memory(self.mem_size)
         self.mem_agent = MemoryAgent('mem_agent', self)
         self.mem_ar_fifo = uvm_tlm_analysis_fifo("mem_ar_fifo", self)
         self.mem_aw_fifo = uvm_tlm_analysis_fifo("mem_aw_fifo", self)
@@ -24,13 +25,17 @@ class NPUEnv(uvm_env):
 
         self.scoreboard = NPUScoreboard('scoreboard', self)
 
-        self.dut = ConfigDB().get(self, "", "dut")
+        self.mem_seq = MemorySequence(mem=self.mem, ar_fifo=self.mem_ar_fifo, aw_fifo=self.mem_aw_fifo, w_fifo=self.mem_w_fifo)
 
+        self.dut = cocotb.top
+
+        ConfigDB().set(None, "*", "dut", self.dut)
         ConfigDB().set(self, "*", "clk", self.dut.clk_npu)
         ConfigDB().set(self, "*", "rst_n", self.dut.rst_n)
         ConfigDB().set(self, "*", "vif", self.dut)
         ConfigDB().set(self.mon_irq, "", "irq", self.dut.irq)
-        ConfigDB().set(None, "", "mem", self.mem)
+        ConfigDB().set(None, "*", "mem", self.mem)
+
 
     def connect_phase(self):
         self.csr_agent.mon_csr_ar.ap.connect(self.scoreboard.csr_ar_fifo.analysis_export)
@@ -52,7 +57,8 @@ class NPUEnv(uvm_env):
         self.mon_irq.ap.connect(self.scoreboard.irq_fifo.analysis_export)
 
     async def run_phase(self):
-        cocotb.start_soon(Clock(cocotb.top.clk_npu, 2).start())
+        cocotb.start_soon(Clock(cocotb.top.clk_npu, NPUArch.CLK_PERIOD).start())
+        cocotb.start_soon(self.mem_seq.start(self.mem_agent.seqr))
 
         self.dut.rst_n.value = 0
         await ClockCycles(self.dut.clk_npu, 5)

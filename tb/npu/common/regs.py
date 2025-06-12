@@ -2,7 +2,7 @@ import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge
 from pyuvm import *
 from common.constants import *
-from common.sequences import *
+from common.seq_items import *
 
 
 class NPUReg_ARCHID(uvm_reg):

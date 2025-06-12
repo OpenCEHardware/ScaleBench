@@ -26,6 +26,7 @@ class CSRAgent(uvm_agent):
         self.reg_adapter = AXI4LiteBusAdapter("reg_adapter")
 
         ConfigDB().set(self, "*", "vif_name", "csr")
+        ConfigDB().set(None, "", "reg_block", self.reg_block)
 
     def connect_phase(self):
         self.drvr.seq_item_port.connect(self.seqr.seq_item_export)

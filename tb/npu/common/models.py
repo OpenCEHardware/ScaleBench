@@ -2,6 +2,7 @@ import pyuvm
 import cocotb
 from pyuvm import *
 from common.sequences import *
+from common.constants import *
 
 
 class NPUModel:
@@ -33,13 +34,17 @@ class NPUModel:
     def csr_read(self, req):
         data = self.registers.get(req.addr)
 
-        if not data:
+        if data is None:
             return AXI4LiteRItem(data=0x00000000, resp=AXI4Result.SLVERR)
         
         return AXI4LiteRItem(data=data, resp=AXI4Result.OK)
 
     def csr_write(self, req, data):
-        self.registers[req.addr] = data.data
+
+        if req.addr == 0x40 and (data.data & 1):
+            self.registers[req.addr] = 0
+        else:
+            self.registers[req.addr] = data.data
 
         # init
         if req.addr == 0x3C and (data.data & 1):
@@ -51,22 +56,22 @@ class NPUModel:
 
             addr = int(self.registers[0x34])
 
-            self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=8, signed=True)
+            self.weights = self.mem.read_mem(addr, length=(self.weight_rows * self.weight_cols), data_width=NPUArch.WEIGHT_DATA_WIDTH, signed=True)
             addr += self.weight_rows * self.weight_cols * 1
 
             self.weights = [self.weights[(self.weight_rows - i - 1) * self.weight_cols + j] for i in range(self.weight_rows) for j in range(self.weight_cols)]
 
-            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=8, signed=True)
+            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=NPUArch.INPUT_DATA_WIDTH, signed=True)
             addr += self.input_rows * self.input_cols * 1
 
             if int(self.registers[0x24]) & 1: #USEBIAS
-                self.bias = self.mem.read_mem(addr, length=self.input_cols, data_width=32, signed=True)
+                self.bias = self.mem.read_mem(addr, length=self.input_cols, data_width=NPUArch.OUTPUT_DATA_WIDTH, signed=True)
                 addr += self.input_cols * 4
             else:
                 self.bias = [0] * self.input_cols
 
             if int(self.registers[0x28]) & 1: #USESUMM
-                self.summ = self.mem.read_mem(addr, length=self.input_cols, data_width=32, signed=True)
+                self.summ = self.mem.read_mem(addr, length=self.input_cols, data_width=NPUArch.OUTPUT_DATA_WIDTH, signed=True)
             else:
                 self.summ = [0] * self.input_cols
 
@@ -80,6 +85,9 @@ class NPUModel:
 
     def predict_result(self):
         assert self.input_cols == self.weight_rows
+
+        if not self.registers[0x20]:
+            return [0] * (self.input_rows * self.weight_cols)
 
         matrix = []
         for row in range(self.input_rows):
@@ -164,16 +172,13 @@ class Memory:
 
         return result
     
-    # Default data width is set to 8 bits, according to the current DUT configuration for INPUT_DATA_WIDTH.
-    # Modify data_width here if the DUT configuration is updated.
-    # Reference: https://opencehardware.github.io/ScaleNPU/block/configuration/#parameters
-    def write_mem(self, addr, data, data_width=8):
+    def write_mem(self, addr, data, data_width=NPUArch.INPUT_DATA_WIDTH):
         assert not (addr & ((data_width // 8) - 1))
         if isinstance(data, int):
             data = (data,)
         self.mem[addr:addr + (data_width // 8) * len(data)] = b''.join(val.to_bytes((data_width // 8), 'little') for val in data)
 
-    def read_mem(self, addr, length=1, data_width=8, signed=False):
+    def read_mem(self, addr, length=1, data_width=NPUArch.INPUT_DATA_WIDTH, signed=False):
         assert not (addr & ((data_width // 8) - 1))
 
         data = []
@@ -187,7 +192,13 @@ class Memory:
         return data
 
     def write_weight(self, base, i, j, data, weight_rows, weight_cols):
-        self.write_mem(base + (weight_rows - i - 1) * weight_cols + j, data)
+        self.write_mem(base + (weight_rows - i - 1) * weight_cols + j, data, data_width=NPUArch.WEIGHT_DATA_WIDTH)
 
     def write_input(self, base, i, j, data, weight_rows, weight_cols, input_cols):
-        self.write_mem(base + weight_rows * weight_cols + i * input_cols + j, data)
+        self.write_mem(base + weight_rows * weight_cols + i * input_cols + j, data, data_width=NPUArch.INPUT_DATA_WIDTH)
+
+    def write_bias(self, base, i, data, weight_rows, weight_cols, input_cols, input_rows):
+        self.write_mem(base + weight_rows * weight_cols + input_rows * input_cols + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)
+
+    def write_summ(self, base, i, data, weight_rows, weight_cols, input_cols, input_rows):
+        self.write_mem(base + weight_rows * weight_cols + input_cols * (input_rows + 1) + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)

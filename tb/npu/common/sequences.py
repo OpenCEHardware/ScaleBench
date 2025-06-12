@@ -1,278 +1,10 @@
 import pyuvm
 import cocotb
-from pyuvm import *
 from cocotb.queue import Queue
+from cocotb.triggers import RisingEdge, with_timeout, ClockCycles
+from pyuvm import *
 from common.constants import *
-
-
-class AXI4LiteRequest(uvm_sequence_item):
-    def __init__(self, name='AXI4LiteRequest'):
-        super().__init__(name)
-
-        self.addr = None
-        self.access = None
-        self.rdata = None
-        self.wdata = None
-        self.wstrb = None
-        self.resp = None
-        self.prot = None
-
-    def do_copy(self, other):
-        self.addr = other.addr
-        self.access = other.access
-        self.rdata = other.rdata
-        self.wdata = other.wdata
-        self.wstrb = other.wstrb
-        self.resp = other.resp
-        self.prot = other.prot
-
-
-class AXI4BurstRequest(uvm_sequence_item):
-    def __init__(self, name='AXI4BurstRequest'):
-        super().__init__(name)
-
-        self.id = None
-        self.addr = None
-        self.access = None
-        self.rdata = None
-        self.wdata = None
-        self.wstrb = None
-        self.resp = None
-        self.prot = None
-        self.size = None
-        self.burst = None
-        self.resp_delays = None
-
-    def do_copy(self, other):
-        self.id = other.id
-        self.addr = other.addr
-        self.access = other.access
-        self.rdata = other.rdata
-        self.wdata = other.wdata
-        self.wstrb = other.wstrb
-        self.resp = other.resp
-        self.prot = other.prot
-        self.size = other.size
-        self.burst = other.burst
-        self.resp_delays = other.resp_delays
-
-    def __str__(self):
-        if self.access == access_e.UVM_WRITE:
-            data_str = ", ".join(f"{beat:08x}" for beat in self.wdata)
-            strb_str = ", ".join(f"{beat:04b}" for beat in self.wstrb)
-            string = f"{self.get_name()} : WRITE id={self.id:02x}, addr={self.addr:08x}, wdata=[{wdata_str}], wstrb=[{wstrb_str}], prot={self.prot}, size={self.size}, burst={self.burst}"
-
-            if self.resp != None:
-                string += f", resp={self.resp}"
-        else:
-            string = f"{self.get_name()} : READ  id={self.id:02x}, addr={self.addr:08x}, prot={self.prot}, size={self.size}, burst={self.burst}"
-            if self.resp != None:
-                string += f", resp={self.resp}"
-            if self.rdata != None:
-                data_str = ", ".join(f"{beat:08x}" for beat in self.rdata)
-                string += f", rdata=[{data_str}]"
-
-        return string
-
-
-class AXI4BurstReady(uvm_sequence_item):
-    def __init__(self, name='AXI4BurstReady', *, ar_delays=[], aw_delays=[], w_delays=[]):
-        super().__init__(name)
-
-        self.ar_delays = ar_delays
-        self.aw_delays = aw_delays
-        self.w_delays = w_delays
-
-    def do_copy(self, other):
-        self.ar_delays = other.ar_delays
-        self.aw_delays = other.aw_delays
-        self.w_delays = other.w_delays
-
-
-class AXI4LiteARItem(uvm_sequence_item):
-    def __init__(self, *, addr, prot, name='AXI4LiteARItem'):
-        super().__init__(name)
-        self.addr = int(addr)
-        self.prot = AXI4Prot(prot)
-
-    def __eq__(self, other):
-        same = self.addr == other.addr and self.prot == other.prot
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : addr={self.addr:08x}, prot={self.prot}"
-
-
-class AXI4LiteAWItem(uvm_sequence_item):
-    def __init__(self, *, addr, prot, name='AXI4LiteAWItem'):
-        super().__init__(name)
-        self.addr = int(addr)
-        self.prot = AXI4Prot(prot)
-
-    def __eq__(self, other):
-        same = self.addr == other.addr and self.prot == other.prot
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : addr={self.addr:08x}, prot={self.prot}"
-
-
-class AXI4LiteWItem(uvm_sequence_item):
-    def __init__(self, *, data, strb, name='AXI4LiteWItem'):
-        super().__init__(name)
-        self.data = int(data)
-        self.strb = int(strb)
-
-    def __eq__(self, other):
-        same = self.data == other.data and self.strb == other.strb
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : data={self.data:08x}, strb={self.strb:04b}"
-
-
-class AXI4LiteRItem(uvm_sequence_item):
-    def __init__(self, *, data, resp, name='AXI4LiteRItem'):
-        super().__init__(name)
-        self.data = int(data)
-        self.resp = AXI4Result(resp)
-
-    def __eq__(self, other):
-        same = self.data == other.data and self.resp == other.resp
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : data={self.data:08x}, resp={self.resp}"
-
-
-class AXI4LiteBItem(uvm_sequence_item):
-    def __init__(self, *, resp, name='AXI4LiteBItem'):
-        super().__init__(name)
-        self.resp = AXI4Result(resp)
-
-    def __eq__(self, other):
-        same = self.resp == other.resp
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : resp={self.resp}"
-
-
-class AXI4BurstARItem(uvm_sequence_item):
-    def __init__(self, *, id, addr, prot, length, size, burst, name='AXI4BurstARItem'):
-        super().__init__(name)
-
-        assert 1 <= length <= 256
-
-        self.id = int(id)
-        self.addr = int(addr)
-        self.prot = AXI4Prot(prot)
-        self.size = AXI4Size(size)
-        self.burst = AXI4BurstMode(burst)
-        self.length = length
-
-        assert self.size.value <= 4
-
-    def __eq__(self, other):
-        same = self.id == other.id and self.addr == other.addr and self.prot == other.prot and self.length == other.length and self.size == other.size and self.burst == other.burst
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : id={self.id:02x}, addr={self.addr:08x}, len={self.length}, prot={self.prot}, burst={self.burst}, size={self.size}"
-
-
-class AXI4BurstAWItem(uvm_sequence_item):
-    def __init__(self, *, id, addr, prot, length, size, burst, name='AXI4BurstAWItem'):
-        super().__init__(name)
-
-        assert 1 <= length <= 256
-
-        self.id = int(id)
-        self.addr = int(addr)
-        self.prot = AXI4Prot(prot)
-        self.size = AXI4Size(size)
-        self.burst = AXI4BurstMode(burst)
-        self.length = length
-
-        assert self.size.value <= 4
-
-    def __eq__(self, other):
-        same = self.id == other.id and self.addr == other.addr and self.prot == other.prot and self.length == other.length and self.size == other.size and self.burst == other.burst
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : id={self.id:02x}, addr={self.addr:08x}, len={self.length}, prot={self.prot}, burst={self.burst}, size={self.size}"
-
-
-class AXI4BurstWItem(uvm_sequence_item):
-    def __init__(self, *, data, strb, name='AXI4BurstWItem'):
-        super().__init__(name)
-
-        assert type(data) is list and type(strb) is list
-        assert len(data) > 0 and len(data) == len(strb)
-
-        self.data = [int(beat) for beat in data]
-        self.strb = [int(beat) for beat in strb]
-
-    def __eq__(self, other):
-        same = self.data == other.data and self.strb == other.strb
-        return same
-
-    def __str__(self):
-        data_str = ", ".join(f"{beat:08x}" for beat in self.data)
-        strb_str = ", ".join(f"{beat:04b}" for beat in self.strb)
-        return f"{self.get_name()} : data=[{data_str}], strb=[{strb_str}]"
-
-
-class AXI4BurstRItem(uvm_sequence_item):
-    def __init__(self, *, id, data, resp, name='AXI4BurstRItem'):
-        super().__init__(name)
-
-        assert type(data) is list and type(resp) is list
-        assert len(data) > 0 and len(data) == len(resp)
-
-        self.id = int(id)
-        self.data = [int(d) for d in data]
-
-        self.resp = AXI4Result.OK
-        for beat in resp:
-            beat = AXI4Result(beat)
-            if beat != AXI4Result.OK:
-                self.resp = beat
-
-    def __eq__(self, other):
-        same = self.id == other.id and self.data == other.data and self.resp == other.resp
-        return same
-
-    def __str__(self):
-        data_str = ", ".join(f"{beat:08x}" for beat in self.data)
-        return f"{self.get_name()} : id={self.id:02x}, data=[{data_str}], resp={self.resp}"
-
-
-class AXI4BurstBItem(uvm_sequence_item):
-    def __init__(self, *, id, resp, name='AXI4BurstBItem'):
-        super().__init__(name)
-        self.id = int(id)
-        self.resp = [AXI4Result(beat) for beat in resp] if isinstance(resp, list) else AXI4Result(resp)
-
-    def __eq__(self, other):
-        same = self.id == other.id and self.resp == other.resp
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()} : id={self.id:02x}, resp={self.resp}"
-
-
-class IRQItem(uvm_sequence_item):
-    def __init__(self, *, name='IRQItem'):
-        super().__init__(name)
-
-    def __eq__(self, other):
-        same = True
-        return same
-
-    def __str__(self):
-        return f"{self.get_name()}"
+from common.seq_items import *
 
 
 class MemorySequence(uvm_sequence):
@@ -340,3 +72,103 @@ class MemorySequence(uvm_sequence):
 
             await self.queue.put(AXI4BurstReady(aw_delays=[0], w_delays=([0] * min(aw_item.length, self.max_pending))))
             await self.queue.put(resp)
+
+
+class NPUBaseSequence(uvm_sequence, uvm_report_object):
+
+    def __init__(self, name="NPUBaseSequence"):
+        super().__init__(name)
+        self.reg_block = ConfigDB().get(None, "", "reg_block")
+        self.dut = ConfigDB().get(None, "", "dut")
+    
+    async def body(self):
+        raise UVMNotImplemented
+
+    async def execute_multiplication(self, mem_item, csr_item):
+
+        await RisingEdge(self.dut.rst_n)
+
+        await self.load_csr(csr_item)
+
+        await self.load_mem(mem_item)
+
+        await self.reg_write(self.reg_block.INIT, 1)
+
+        await self.wait_irq()
+
+        await self.reg_write(self.reg_block.IRQ, 1)
+
+        await self.reset()
+
+    async def load_csr(self, item):
+        for reg, mode, value in item.operations:
+
+            if mode == CSRMode.READ:
+                await self.reg_read(reg)
+
+            elif mode == CSRMode.WRITE:
+                await self.reg_write(reg, value)
+
+    async def load_mem(self, item):
+        mem = ConfigDB().get(None, "", "mem")
+
+        base_addr = await self.reg_read(self.reg_block.BASE)
+        input_rows = await self.reg_read(self.reg_block.INROWS)
+        input_cols = await self.reg_read(self.reg_block.INCOLS)
+        weight_rows = await self.reg_read(self.reg_block.WGHTROWS)
+        weight_cols = await self.reg_read(self.reg_block.WGHTCOLS)
+
+        assert input_rows * input_cols == len(item.inputs)
+        assert weight_rows * weight_cols == len(item.weights)
+
+        for index, data in enumerate(item.weights):
+            i = index // weight_cols
+            j = index % weight_cols
+            mem.write_weight(base_addr, i, j, data, weight_rows, weight_cols)
+
+        for index, data in enumerate(item.inputs):
+            i = index // input_cols
+            j = index % input_cols
+            mem.write_input(base_addr, i, j, data, weight_rows, weight_cols, input_cols)
+
+        for index, data in enumerate(item.bias):
+            mem.write_bias(base_addr, index, data, weight_rows, weight_cols, input_cols, input_rows)
+
+        for index, data in enumerate(item.summ):
+            mem.write_summ(base_addr, index, data, weight_rows, weight_cols, input_cols, input_rows)
+
+    async def reg_write(self, reg, value):
+        resp = await reg.write(value, self.reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
+        assert resp == status_t.IS_OK
+    
+    async def reg_read(self, reg):
+        resp, data = await reg.read(self.reg_block.def_map, path_t.FRONTDOOR, check_t.NO_CHECK)
+        assert resp == status_t.IS_OK
+        return data
+
+    async def wait_irq(self, cycles=10000):
+        try:
+            await with_timeout(RisingEdge(self.dut.irq), timeout_time=cycles * NPUArch.CLK_PERIOD)
+            self.logger.info("OPERATION FINISHED")
+        except cocotb.result.SimTimeoutError:
+            self.logger.error(f"IRQ TIMEOUT AFTER: {cycles} cycles")
+    
+    async def reset(self):
+        self.logger.info("RESETTING NPU")
+        self.dut.rst_n.value = 0
+        await ClockCycles(self.dut.clk_npu, 5)
+        self.dut.rst_n.value = 1
+
+
+class CustomQuerySeq(NPUBaseSequence):
+
+    def __init__(self, name):
+        super().__init__(name)
+        self.csr_item = None
+        self.mem_item = None
+
+    async def body(self):
+        assert isinstance(self.csr_item, CSRSeqItem)
+        assert isinstance(self.mem_item, MemSeqItem)
+
+        await self.execute_multiplication(self.mem_item, self.csr_item)

@@ -45,10 +45,10 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  request:  {ar_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {r_item}")
-            else:
-                self.logger.debug(f"CSR read executed correctly")
-                self.logger.info(f"|  request:  {ar_item}")
-                self.logger.info(f"|__data:   {r_item}")
+            # else:
+            #     self.logger.info(f"CSR read executed correctly")
+            #     self.logger.info(f"|  request:  {ar_item}")
+            #     self.logger.info(f"|__data:   {r_item}")
 
     async def csr_write_main(self):
         while True:
@@ -63,10 +63,10 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  data:     {w_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {b_item}")
-            else:
-                self.logger.info(f"CSR write executed correctly")
-                self.logger.info(f"|  request:  {aw_item}")
-                self.logger.info(f"|__data:     {w_item}")
+            # else:
+            #     self.logger.info(f"CSR write executed correctly")
+            #     self.logger.info(f"|  request:  {aw_item}")
+            #     self.logger.info(f"|__data:     {w_item}")
 
     async def irq_main(self):
         while True:

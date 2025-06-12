@@ -1,5 +1,10 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
+class NPUArch(IntEnum):
+    INPUT_DATA_WIDTH = 8
+    WEIGHT_DATA_WIDTH = 8
+    OUTPUT_DATA_WIDTH = 32
+    CLK_PERIOD = 2
 
 class CSRMode(Enum):
     READ  = 0
