@@ -30,6 +30,7 @@ class NPUModel:
 
     def __init__(self, mem):
         self.mem = mem
+        self.last_result = None
 
     def csr_read(self, req):
         data = self.registers.get(req.addr)
@@ -53,6 +54,7 @@ class NPUModel:
             self.input_cols = int(self.registers[0x0c])
             self.weight_rows = int(self.registers[0x10])
             self.weight_cols = int(self.registers[0x14])
+            self.reinputs = int(self.registers[0x18])
 
             addr = int(self.registers[0x34])
 
@@ -61,8 +63,13 @@ class NPUModel:
 
             self.weights = [self.weights[(self.weight_rows - i - 1) * self.weight_cols + j] for i in range(self.weight_rows) for j in range(self.weight_cols)]
 
-            self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=NPUArch.INPUT_DATA_WIDTH, signed=True)
-            addr += self.input_rows * self.input_cols * 1
+            if self.reinputs:
+                self.inputs = self.last_result
+            else:
+                self.inputs = self.mem.read_mem(addr, length=(self.input_rows * self.input_cols), data_width=NPUArch.INPUT_DATA_WIDTH, signed=True)
+                addr += self.input_rows * self.input_cols * 1
+
+            self.last_result = None
 
             if int(self.registers[0x24]) & 1: #USEBIAS
                 self.bias = self.mem.read_mem(addr, length=self.input_cols, data_width=NPUArch.OUTPUT_DATA_WIDTH, signed=True)
@@ -83,7 +90,7 @@ class NPUModel:
     def get_result_length(self):
         return int(self.weight_rows * self.input_cols)
 
-    def predict_result(self):
+    def interrupt(self):
         assert self.input_cols == self.weight_rows
 
         if not self.registers[0x20]:
@@ -110,7 +117,11 @@ class NPUModel:
 
                 matrix.append(product)
 
-        return matrix
+        self.last_result = matrix
+
+    def predict_result(self):
+        assert isinstance(self.last_result, list)
+        return self.last_result.copy()
 
 
 class Memory:
