@@ -103,6 +103,9 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
         await self.reset()
 
     async def load_csr(self, item):
+
+        # self.logger.info(item)
+
         for reg, mode, value in item.operations:
 
             if mode == CSRMode.READ:
@@ -119,6 +122,8 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
         input_cols = await self.reg_read(self.reg_block.INCOLS)
         weight_rows = await self.reg_read(self.reg_block.WGHTROWS)
         weight_cols = await self.reg_read(self.reg_block.WGHTCOLS)
+
+        # self.logger.info(item)
 
         for index, data in enumerate(item.weights):
             i = index // weight_cols

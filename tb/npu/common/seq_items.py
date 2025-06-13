@@ -295,7 +295,7 @@ class CSRSeqItem(uvm_sequence_item):
         return isinstance(other, CSRSeqItem) and self.operations == other.operations
 
     def __str__(self):
-        return f"{self.name}:\n" + "\n".join(f"REG:{reg}, MODE:{mode}, VALUE:{value}" 
+        return f"{self.get_name()}:\n" + "\n".join(f"REG:{reg.get_name()}, MODE:{mode}, VALUE:{value}" 
                                             for reg, mode, value in self.operations)
 
     def matrix_setup(self, inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr):

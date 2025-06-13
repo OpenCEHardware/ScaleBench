@@ -13,7 +13,7 @@ class NPU04_MUL_Identity(BaseTest):
 
     def end_of_elaboration_phase(self):
         self.csr_item = csr_item = CSRSeqItem("NPU04_csr_item")
-        self.mem_item = MemSeqItem("NPU04_mem_item", 0, 0)
+        self.mem_item = MemSeqItem("NPU04_mem_item")
         self.query = BasicQuerySeq("NPU04_seq", self.mem_item, self.csr_item)
 
     async def run_phase(self):
@@ -45,21 +45,13 @@ class NPU04_MUL_Identity(BaseTest):
             result_addr=1024
         )
 
-        inputs_matrix = [
-            random.randint(1, 127) for _ in range(inputs_cols)
-            for _ in range(inputs_rows)
-        ]
-
         weights_matrix = [
             1 if i == j else 0 for j in range(weights_cols)
             for i in range(weights_rows)
         ]
 
-        print(inputs_matrix)
-        print(weights_matrix)
 
-
-        self.mem_item.inputs = inputs_matrix
+        self.mem_item.randomize_inputs(inputs_rows, inputs_cols)
 
         self.mem_item.weights = weights_matrix
 

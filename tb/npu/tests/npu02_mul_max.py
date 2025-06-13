@@ -13,7 +13,7 @@ class NPU02_MUL_Max(BaseTest):
 
     def end_of_elaboration_phase(self):
         self.csr_item = csr_item = CSRSeqItem("NPU02_csr_item")
-        self.mem_item = MemSeqItem("NPU02_mem_item", 0, 0)
+        self.mem_item = MemSeqItem("NPU02_mem_item")
         self.query = BasicQuerySeq("NPU02_seq", self.mem_item, self.csr_item)
 
     async def run_phase(self):
@@ -45,9 +45,9 @@ class NPU02_MUL_Max(BaseTest):
             result_addr=1024
         )
 
-        self.mem_item.inputs = [254] * inputs_cols * inputs_rows
+        self.mem_item.inputs = [250] * inputs_cols * inputs_rows
 
-        self.mem_item.weights = [254] * inputs_cols * inputs_rows
+        self.mem_item.weights = [175] * inputs_cols * inputs_rows
 
         await self.query.start()
 

@@ -14,7 +14,7 @@ class NPU00_MUL_Basic(BaseTest):
     def end_of_elaboration_phase(self):
         self.csr_item = csr_item = CSRSeqItem("NPU00_csr_item")
         # Using an empty item to test case of complete clean memory
-        self.mem_item = MemSeqItem("NPU00_mem_item", 0, 0)
+        self.mem_item = MemSeqItem("NPU00_mem_item")
         self.query = BasicQuerySeq("NPU00_seq", self.mem_item, self.csr_item)
 
     async def run_phase(self):
