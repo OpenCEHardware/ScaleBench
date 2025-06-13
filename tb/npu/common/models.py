@@ -218,7 +218,9 @@ class Memory:
         self.write_mem(base + weight_rows * weight_cols + i * input_cols + j, data, data_width=NPUArch.INPUT_DATA_WIDTH)
 
     def write_bias(self, base, i, data, weight_rows, weight_cols, input_cols, input_rows):
-        self.write_mem(base + weight_rows * weight_cols + input_rows * input_cols + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)
+        addr = (base + weight_rows * weight_cols + input_rows * input_cols + 3) & ~3
+        self.write_mem(addr + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)
 
     def write_summ(self, base, i, data, weight_rows, weight_cols, input_cols, input_rows):
-        self.write_mem(base + weight_rows * weight_cols + input_cols * (input_rows + 1) + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)
+        addr = ((base + weight_rows * weight_cols + input_rows * input_cols + 3) & ~3) + input_cols * 4
+        self.write_mem(addr + i * 4, data, data_width=NPUArch.OUTPUT_DATA_WIDTH)
