@@ -102,7 +102,13 @@ class NPUModel:
                         product = 0
 
                 product >>= self.shift
-                matrix.append(product & 0xffffffff)
+
+                # Pasa de 16 bits con signo a 32
+                product = product & 0xffff
+                if product & 0x8000:
+                    product -= 0x10000
+
+                matrix.append(product)
 
         return matrix
 

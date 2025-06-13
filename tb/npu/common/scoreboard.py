@@ -73,7 +73,7 @@ class NPUScoreboard(uvm_scoreboard):
             irq_item = await self.irq_fifo.get()
             self.logger.info(f"Interrupt: {irq_item}")
 
-            actual = self.mem.read_mem(self.model.get_result_address(), length=self.model.get_result_length(), data_width=32)
+            actual = self.mem.read_mem(self.model.get_result_address(), length=self.model.get_result_length(), data_width=32, signed=True)
             expected = self.model.predict_result()
 
             if actual != expected:
