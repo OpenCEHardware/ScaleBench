@@ -1,8 +1,10 @@
+import os
 import cocotb
 import pyuvm
 import logging
 from pyuvm import *
 from cocotb.clock import Clock
+from cocotb_coverage.coverage import coverage_db
 from common.agents import *
 from common.scoreboard import *
 from common.models import *
@@ -71,5 +73,13 @@ class BaseTest(uvm_test):
         ConfigDB().set(None, "", "error", False)
 
     def final_phase(self):
+        seed = os.environ.get('RANDOM_SEED', '')
+        if seed:
+            seed = f".{seed}";
+
+        coverage_db.report_coverage(self.logger.info, bins=True)
+        coverage_db.export_to_xml(filename=f"coverage{seed}.xml")
+        coverage_db.export_to_yaml(filename=f"coverage{seed}.yaml")
+
         if ConfigDB().get(None, "", "error"):
             raise UVMError(f"{type(self).__name__} failed, check errors")

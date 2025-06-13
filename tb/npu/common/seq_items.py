@@ -4,6 +4,8 @@ import random
 from pyuvm import *
 from cocotb.queue import Queue
 from common.constants import *
+import common.coverage as coverage
+
 
 class AXI4LiteRequest(uvm_sequence_item):
     def __init__(self, name='AXI4LiteRequest'):
@@ -319,6 +321,11 @@ class CSRSeqItem(uvm_sequence_item):
             (self.reg_block.RESULT, CSRMode.WRITE, result_addr)
         ]
 
+        coverage.input_rows(inputs_rows)
+        coverage.input_cols(inputs_cols)
+        coverage.weight_rows(weights_rows)
+        coverage.weight_cols(weights_cols)
+
     def features_setup(self, reinputs=False, saveout=True, usebias=True, usesumm=True, shift_amount=0, activation_function=False, reweights=False):
         self._feature_ops = [
             (self.reg_block.REINPUTS, CSRMode.WRITE, int(reinputs)),
@@ -330,6 +337,13 @@ class CSRSeqItem(uvm_sequence_item):
             (self.reg_block.REWEIGHTS, CSRMode.WRITE, int(reweights))
         ]
 
+        coverage.reinputs(reinputs)
+        coverage.reweights(reweights)
+        coverage.usebias(usebias)
+        coverage.usesumm(usesumm)
+        coverage.shiftamt(shift_amount)
+        coverage.actfn(activation_function)
+        coverage.saveout(saveout)
 
 
 class MemSeqItem(uvm_sequence_item):
