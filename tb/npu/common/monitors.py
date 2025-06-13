@@ -81,7 +81,12 @@ class AXI4LiteARMonitor(ReadyValidMonitor):
         self.prot = self.get_vif_signal('prot')
 
     def sample(self, id):
-        return AXI4LiteARItem(addr=self.addr.value, prot=self.prot.value)
+        addr = self.addr.value
+        if addr & 3:
+            self.logger.error(f"misaligned address: {addr}")
+            ConfigDB().set(None, "", "error", True)
+
+        return AXI4LiteARItem(addr=addr, prot=self.prot.value)
 
 
 class AXI4LiteAWMonitor(ReadyValidMonitor):
@@ -95,7 +100,12 @@ class AXI4LiteAWMonitor(ReadyValidMonitor):
         self.prot = self.get_vif_signal('prot')
 
     def sample(self, id):
-        return AXI4LiteAWItem(addr=self.addr.value, prot=self.prot.value)
+        addr = self.addr.value
+        if addr & 3:
+            self.logger.error(f"misaligned address: {addr}")
+            ConfigDB().set(None, "", "error", True)
+
+        return AXI4LiteAWItem(addr=addr, prot=self.prot.value)
 
 
 class AXI4LiteWMonitor(ReadyValidMonitor):
@@ -153,7 +163,12 @@ class AXI4BurstARMonitor(ReadyValidMonitor):
         self.burst = self.get_vif_signal('burst')
 
     def sample(self, id):
-        return AXI4BurstARItem(id=id, addr=self.addr.value, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
+        addr = self.addr.value
+        if addr & 3:
+            self.logger.error(f"misaligned address: {addr}")
+            ConfigDB().set(None, "", "error", True)
+
+        return AXI4BurstARItem(id=id, addr=addr, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
 
 
 class AXI4BurstAWMonitor(ReadyValidMonitor):
@@ -170,7 +185,12 @@ class AXI4BurstAWMonitor(ReadyValidMonitor):
         self.burst = self.get_vif_signal('burst')
 
     def sample(self, id):
-        return AXI4BurstAWItem(id=id, addr=self.addr.value, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
+        addr = self.addr.value
+        if addr & 3:
+            self.logger.error(f"misaligned address: {addr}")
+            ConfigDB().set(None, "", "error", True)
+
+        return AXI4BurstAWItem(id=id, addr=addr, prot=self.prot.value, length=(self.len.value + 1), size=self.size.value, burst=self.burst.value)
 
 
 class AXI4BurstWMonitor(ReadyValidMonitor):
