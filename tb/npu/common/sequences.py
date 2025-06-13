@@ -98,6 +98,10 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
 
         await self.wait_irq()
 
+        exit_code = await self.reg_read(self.reg_block.EXITCODE)
+
+        self.logger.info(f"EXIT_CODE: {exit_code}")
+
         await self.reg_write(self.reg_block.IRQ, 1)
 
         await self.reset()

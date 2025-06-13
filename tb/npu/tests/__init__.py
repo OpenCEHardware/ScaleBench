@@ -27,5 +27,5 @@ from .npu25_all_zeros_bmax_smax_aon import *
 from .npu26_all_random_bneg_s0_aon import *
 from .npu27_all_max_bmax_smax_aon import *
 from .npu28_all_special_bneg_smax_aon import *
-from .npu29_all_identity_b0_s0_aoff import *
-
+from .npu29_all_ramdon_brand_srand_arand import *
+from .npu30_all_ramdon_summs import *

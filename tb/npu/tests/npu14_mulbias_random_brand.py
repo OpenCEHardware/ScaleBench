@@ -43,7 +43,7 @@ class NPU14_MULBIAS_Random_B0(BaseTest):
 
         self.mem_item.randomize_inputs(inputs_rows, inputs_cols)
         self.mem_item.randomize_weights(weights_rows, weights_cols)
-        self.mem_item.bias = [random.randint(-0x7FFFFFFF, 0x7FFFFFFF) for _ in range(inputs_cols)]
+        self.mem_item.bias = [random.randint(-0x7FFFFFFF, -0x7FFFFFFF) for _ in range(inputs_cols)]
 
         await self.query.start()
 
