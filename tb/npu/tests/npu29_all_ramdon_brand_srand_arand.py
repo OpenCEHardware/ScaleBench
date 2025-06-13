@@ -37,14 +37,17 @@ class NPU29_All_Ramdon_Brand_Srand_Arand(BaseTest):
             inputs_cols = weights_rows = random.randrange(2, 9, 2)
             weights_cols = random.randrange(2, 9, 2)
 
+            base_addr = random.randint(0, 824)
+            result_addr = random.randint(1024, 1984)
+
             # Using default value of systolic array size
             self.csr_item.matrix_setup(
                 inputs_rows,
                 inputs_cols,
                 weights_rows, 
                 weights_cols,
-                base_addr=0x0,
-                result_addr=1024
+                base_addr=base_addr & ~3,
+                result_addr=result_addr & ~3
             )
 
             self.mem_item.randomize_inputs(inputs_rows, inputs_cols, -255, 255)
