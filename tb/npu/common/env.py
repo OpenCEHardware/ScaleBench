@@ -8,7 +8,7 @@ from common.scoreboard import *
 from common.models import *
 
 class NPUEnv(uvm_env):
-    def __init__(self, name="NPUEnv", parent=None, mem_size=1024):
+    def __init__(self, name="NPUEnv", parent=None, mem_size=2048):
         self.mem_size = mem_size
         super().__init__(name, parent)
 

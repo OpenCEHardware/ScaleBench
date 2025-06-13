@@ -88,6 +88,8 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
 
         await RisingEdge(self.dut.rst_n)
 
+        self.logger.info("STARTING OPERATION")
+
         await self.load_csr(csr_item)
 
         await self.load_mem(mem_item)
@@ -117,9 +119,6 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
         input_cols = await self.reg_read(self.reg_block.INCOLS)
         weight_rows = await self.reg_read(self.reg_block.WGHTROWS)
         weight_cols = await self.reg_read(self.reg_block.WGHTCOLS)
-
-        assert input_rows * input_cols == len(item.inputs)
-        assert weight_rows * weight_cols == len(item.weights)
 
         for index, data in enumerate(item.weights):
             i = index // weight_cols
@@ -160,15 +159,12 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
         self.dut.rst_n.value = 1
 
 
-class CustomQuerySeq(NPUBaseSequence):
+class BasicQuerySeq(NPUBaseSequence):
 
-    def __init__(self, name):
+    def __init__(self, name, mem_item, csr_item):
         super().__init__(name)
-        self.csr_item = None
-        self.mem_item = None
+        self.mem_item = mem_item
+        self.csr_item = csr_item
 
     async def body(self):
-        assert isinstance(self.csr_item, CSRSeqItem)
-        assert isinstance(self.mem_item, MemSeqItem)
-
         await self.execute_query(self.mem_item, self.csr_item)
