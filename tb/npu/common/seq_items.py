@@ -321,10 +321,7 @@ class CSRSeqItem(uvm_sequence_item):
             (self.reg_block.RESULT, CSRMode.WRITE, result_addr)
         ]
 
-        coverage.input_rows(inputs_rows)
-        coverage.input_cols(inputs_cols)
-        coverage.weight_rows(weights_rows)
-        coverage.weight_cols(weights_cols)
+        coverage.shape(inputs_rows, inputs_cols, weights_rows, weights_cols)
 
     def features_setup(self, reinputs=False, saveout=True, usebias=True, usesumm=True, shift_amount=0, activation_function=False, reweights=False):
         self._feature_ops = [
@@ -337,13 +334,13 @@ class CSRSeqItem(uvm_sequence_item):
             (self.reg_block.REWEIGHTS, CSRMode.WRITE, int(reweights))
         ]
 
-        coverage.reinputs(reinputs)
-        coverage.reweights(reweights)
-        coverage.usebias(usebias)
-        coverage.usesumm(usesumm)
-        coverage.shiftamt(shift_amount)
-        coverage.actfn(activation_function)
-        coverage.saveout(saveout)
+        coverage.features(shift_amount,
+                          saveout,
+                          usebias,
+                          usesumm,
+                          reinputs,
+                          reweights,
+                          activation_function)
 
 
 class MemSeqItem(uvm_sequence_item):

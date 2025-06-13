@@ -7,84 +7,68 @@ def irq(irq):
     pass
 
 
-@CoverPoint("shape.weight_rows",
-            bins=[0, 2, 4, 6, 8, 'other'],
-            bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda n: n if 0 <= n <= 8 else 'other')
-def weight_rows(n):
-    pass
-
-
-@CoverPoint("shape.weight_cols",
-            bins=[0, 2, 4, 6, 8, 'other'],
-            bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda n: n if 0 <= n <= 8 else 'other')
-def weight_cols(n):
-    pass
-
-
 @CoverPoint("shape.input_rows",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda n: n if 0 <= n <= 8 else 'other')
-def input_rows(n):
-    pass
-
-
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols: input_rows)
 @CoverPoint("shape.input_cols",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda n: n if 0 <= n <= 8 else 'other')
-def input_cols(n):
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols: input_cols)
+@CoverPoint("shape.weight_rows",
+            bins=[0, 2, 4, 6, 8, 'other'],
+            bins_labels=['0', '2', '4', '6', '8', '> 8'],
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols: weight_rows)
+@CoverPoint("shape.weight_cols",
+            bins=[0, 2, 4, 6, 8, 'other'],
+            bins_labels=['0', '2', '4', '6', '8', '> 8'],
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols: weight_cols)
+@CoverCross("shape.input_weight_rows_cols",
+            items=["shape.input_rows",
+                   "shape.input_cols",
+                   "shape.weight_rows",
+                   "shape.weight_cols"])
+def shape(input_rows, input_cols, weight_rows, weight_cols):
     pass
 
 
-@CoverPoint("csr.shiftamt",
+@CoverPoint("features.shiftamt",
             bins=[0, 32, 'other'],
             bins_labels=['0', '32', '> 0 && < 32'],
-            xf=lambda n: n if n in (0, 32) else 'other')
-def shiftamt(n):
-    pass
-
-
-@CoverPoint("csr.saveout",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                shiftamt if shiftamt in (0, 32) else 'other')
+@CoverPoint("features.saveout",
             bins=[True, False],
-            xf=lambda x: bool(x))
-def saveout(saveout):
-    pass
-
-
-@CoverPoint("csr.usebias",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                bool(saveout))
+@CoverPoint("features.usebias",
             bins=[True, False],
-            xf=lambda x: bool(x))
-def usebias(usebias):
-    pass
-
-
-@CoverPoint("csr.usesumm",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                bool(usebias))
+@CoverPoint("features.usesumm",
             bins=[True, False],
-            xf=lambda x: bool(x))
-def usesumm(usesumm):
-    pass
-
-
-@CoverPoint("csr.reinputs",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                bool(usesumm))
+@CoverPoint("features.reinputs",
             bins=[True, False],
-            xf=lambda x: bool(x))
-def reinputs(reinputs):
-    pass
-
-
-@CoverPoint("csr.reweights",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                bool(reinputs))
+@CoverPoint("features.reweights",
             bins=[True, False],
-            xf=lambda x: bool(x))
-def reweights(reweights):
-    pass
-
-
-@CoverPoint("csr.actfn",
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                bool(reweights))
+@CoverPoint("features.actfn",
             bins=[0, 1],
             bins_labels=['Off', 'ReLU'],
-            xf=lambda x: int(x))
-def actfn(actfn):
+            xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
+                int(actfn))
+@CoverCross("features.all",
+            items=["features.shiftamt",
+                   "features.saveout",
+                   "features.usebias",
+                   "features.usesumm",
+                   "features.reinputs",
+                   "features.reweights",
+                   "features.actfn"])
+def features(shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn):
     pass
