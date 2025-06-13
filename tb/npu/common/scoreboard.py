@@ -29,6 +29,8 @@ class NPUScoreboard(uvm_scoreboard):
 
         self.irq_fifo = uvm_tlm_analysis_fifo("irq_fifo", self)
 
+        self.error = False
+
     async def run_phase(self):
         cocotb.start_soon(self.csr_read_main())
         cocotb.start_soon(self.csr_write_main())
@@ -45,6 +47,7 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  request:  {ar_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {r_item}")
+                self.error = True
             # else:
             #     self.logger.info(f"CSR read executed correctly")
             #     self.logger.info(f"|  request:  {ar_item}")
@@ -63,6 +66,7 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"|  data:     {w_item}")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {b_item}")
+                self.error = True
             # else:
             #     self.logger.info(f"CSR write executed correctly")
             #     self.logger.info(f"|  request:  {aw_item}")
@@ -80,6 +84,7 @@ class NPUScoreboard(uvm_scoreboard):
                 self.logger.error(f"Bad result")
                 self.logger.error(f"|  expected: {expected}")
                 self.logger.error(f"|__actual:   {actual}")
+                self.error = True
             else:
                 self.logger.info(f"Correct result: {actual}")
 
@@ -89,6 +94,9 @@ class NPUScoreboard(uvm_scoreboard):
         self.check_fifo(self.csr_w_fifo, "csr_w_fifo")
         self.check_fifo(self.csr_r_fifo, "csr_r_fifo")
         self.check_fifo(self.csr_b_fifo, "csr_b_fifo")
+
+        if self.error:
+            raise UVMError(f"{self.get_name()} failed, check previous errors")
 
     def check_fifo(self, fifo, fifo_name):
         if not fifo.is_empty():
@@ -100,3 +108,5 @@ class NPUScoreboard(uvm_scoreboard):
                     break
 
                 self.logger.error(item)
+
+            self.error = True
