@@ -1,28 +1,28 @@
 from .npu00_mul_basic import *
 from .npu01_mul_zeros import *
-# from .npu02_mul_max import *
-# from .npu03_mul_special import *
-# from .npu04_mul_identity import *
-# from .npu05_mul_random import *
+from .npu02_mul_max import *
+from .npu03_mul_special import *
+from .npu04_mul_identity import *
+from .npu05_mul_random import *
 from .npu06_mul_zerosize import *
 from .npu07_mul_randsize import *
 from .npu08_mulbias_zeros_b0 import *
 from .npu09_mulbias_zeros_bmax import *
-# from .npu10_mulbias_zeros_bneg import *
+from .npu10_mulbias_zeros_bneg import *
 from .npu11_mulbias_max_bmax import *
-# from .npu12_mulbias_special_bneg import *
-# from .npu13_mulbias_identity_bmax import *
-# from .npu14_mulbias_random_brand import *
-# from .npu15_mulact_zeros_aon import *
-# from .npu16_mulact_negativeonly_aon import *
+from .npu12_mulbias_special_bneg import *
+from .npu13_mulbias_identity_bmax import *
+from .npu14_mulbias_random_brand import *
+from .npu15_mulact_zeros_aon import *
+from .npu16_mulact_negativeonly_aon import *
 from .npu17_mulact_max_aon import *
-# from .npu18_mulact_random_aon import *
+from .npu18_mulact_random_aon import *
 from .npu19_mulshft_zeros_s0 import *
-# from .npu20_mulshft_zeros_smax import *
-# from .npu21_mulshft_max_s0 import *
+from .npu20_mulshft_zeros_smax import *
+from .npu21_mulshft_max_s0 import *
 from .npu22_mulshft_max_smax import *
-# from .npu23_mulshft_random_s0 import *
-# from .npu24_mulshft_random_smax import *
+from .npu23_mulshft_random_s0 import *
+from .npu24_mulshft_random_smax import *
 from .npu25_all_zeros_bmax_smax_aon import *
 from .npu26_all_random_bneg_s0_aon import *
 from .npu27_all_max_bmax_smax_aon import *
