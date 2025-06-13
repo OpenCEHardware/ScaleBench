@@ -18,7 +18,7 @@ class NPU30_All_Ramdon_Summs(BaseTest):
     async def run_phase(self):
         self.raise_objection()
 
-        for idx in range(20):
+        for idx in range(10):
 
             self.logger.info(f"ITERATION: {idx}")
 

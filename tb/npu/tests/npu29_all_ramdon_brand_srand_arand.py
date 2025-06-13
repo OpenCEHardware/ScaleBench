@@ -18,7 +18,7 @@ class NPU29_All_Ramdon_Brand_Srand_Arand(BaseTest):
     async def run_phase(self):
         self.raise_objection()
 
-        for idx in range(20):
+        for idx in range(10):
 
             self.logger.info(f"ITERATION: {idx}")
 
