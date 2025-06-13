@@ -63,3 +63,8 @@ class NPUEnv(uvm_env):
         self.dut.rst_n.value = 0
         await ClockCycles(self.dut.clk_npu, 5)
         self.dut.rst_n.value = 1
+
+
+class BaseTest(uvm_test):
+    def build_phase(self):
+        self.env = NPUEnv('env', self)
