@@ -2,7 +2,8 @@ from cocotb_coverage.coverage import *
 
 
 @CoverPoint("io.irq",
-            bins=[True])
+            bins=[True],
+            bins_labels=['done'])
 def irq(irq):
     pass
 
@@ -10,24 +11,23 @@ def irq(irq):
 @CoverPoint("shape.input_rows",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda input_rows, input_cols, weight_rows, weight_cols: input_rows)
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols:
+                input_rows if input_rows <= 8 else 'other')
 @CoverPoint("shape.input_cols",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda input_rows, input_cols, weight_rows, weight_cols: input_cols)
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols:
+                input_cols if input_cols <= 8 else 'other')
 @CoverPoint("shape.weight_rows",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda input_rows, input_cols, weight_rows, weight_cols: weight_rows)
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols:
+                weight_rows if weight_rows <= 8 else 'other')
 @CoverPoint("shape.weight_cols",
             bins=[0, 2, 4, 6, 8, 'other'],
             bins_labels=['0', '2', '4', '6', '8', '> 8'],
-            xf=lambda input_rows, input_cols, weight_rows, weight_cols: weight_cols)
-@CoverCross("shape.input_weight_rows_cols",
-            items=["shape.input_rows",
-                   "shape.input_cols",
-                   "shape.weight_rows",
-                   "shape.weight_cols"])
+            xf=lambda input_rows, input_cols, weight_rows, weight_cols:
+                weight_cols if weight_cols <= 8 else 'other')
 def shape(input_rows, input_cols, weight_rows, weight_cols):
     pass
 
@@ -39,22 +39,27 @@ def shape(input_rows, input_cols, weight_rows, weight_cols):
                 shiftamt if shiftamt in (0, 32) else 'other')
 @CoverPoint("features.saveout",
             bins=[True, False],
+            bins_labels=['Save', 'NoSave'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 bool(saveout))
 @CoverPoint("features.usebias",
             bins=[True, False],
+            bins_labels=['UseBias', 'NoBias'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 bool(usebias))
 @CoverPoint("features.usesumm",
             bins=[True, False],
+            bins_labels=['UseSumm', 'NoSumm'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 bool(usesumm))
 @CoverPoint("features.reinputs",
             bins=[True, False],
+            bins_labels=['ReuseInputs', 'NewInputs'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 bool(reinputs))
 @CoverPoint("features.reweights",
             bins=[True, False],
+            bins_labels=['ReuseWeights', 'NewWeights'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 bool(reweights))
 @CoverPoint("features.actfn",
