@@ -274,51 +274,62 @@ class IRQItem(uvm_sequence_item):
     def __str__(self):
         return f"{self.get_name()}"
 
+
 class CSRSeqItem(uvm_sequence_item):
     def __init__(self, name):
         super().__init__(name)
-        self.operations = []
+        self._matrix_ops = []
+        self._feature_ops = []
+        self._custom_ops = []
         self.reg_block = ConfigDB().get(None, "", "reg_block")
 
     def add_operation(self, register, mode, value=0x0):
-
         assert isinstance(register, uvm_reg)
         assert isinstance(mode, CSRMode)
-        assert isinstance(value, (int))
+        assert isinstance(value, int)
 
         from common.regs import NPUReg_INIT
         assert not isinstance(register, NPUReg_INIT)
 
-        self.operations.append((register, mode, value))
+        self._custom_ops.append((register, mode, value))
+
+    @property
+    def operations(self):
+        return self._matrix_ops + self._feature_ops + self._custom_ops
 
     def __eq__(self, other):
         return isinstance(other, CSRSeqItem) and self.operations == other.operations
 
     def __str__(self):
-        return f"{self.get_name()}:\n" + "\n".join(f"REG:{reg.get_name()}, MODE:{mode}, VALUE:{value}" 
-                                            for reg, mode, value in self.operations)
+        return f"{self.get_name()}:\n" + "\n".join(
+            f"REG:{reg.get_name()}, MODE:{mode}, VALUE:{value}" 
+            for reg, mode, value in self.operations
+        )
 
     def matrix_setup(self, inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr):
-
         assert all(isinstance(x, int) for x in [inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr]), \
-        "All parameters must be integers"
+            "All parameters must be integers"
 
-        self.add_operation(self.reg_block.INROWS, CSRMode.WRITE, inputs_rows)
-        self.add_operation(self.reg_block.INCOLS, CSRMode.WRITE, inputs_cols)
-        self.add_operation(self.reg_block.WGHTROWS, CSRMode.WRITE, weights_rows)
-        self.add_operation(self.reg_block.WGHTCOLS, CSRMode.WRITE, weights_cols)
-
-        self.add_operation(self.reg_block.BASE, CSRMode.WRITE, base_addr)
-        self.add_operation(self.reg_block.RESULT, CSRMode.WRITE, result_addr)
+        self._matrix_ops = [  # replace previous matrix ops
+            (self.reg_block.INROWS, CSRMode.WRITE, inputs_rows),
+            (self.reg_block.INCOLS, CSRMode.WRITE, inputs_cols),
+            (self.reg_block.WGHTROWS, CSRMode.WRITE, weights_rows),
+            (self.reg_block.WGHTCOLS, CSRMode.WRITE, weights_cols),
+            (self.reg_block.BASE, CSRMode.WRITE, base_addr),
+            (self.reg_block.RESULT, CSRMode.WRITE, result_addr)
+        ]
 
     def features_setup(self, reinputs=False, saveout=True, usebias=True, usesumm=True, shift_amount=0, activation_function=False, reweights=False):
-        self.add_operation(self.reg_block.REINPUTS, CSRMode.WRITE, int(reinputs))
-        self.add_operation(self.reg_block.SAVEOUT, CSRMode.WRITE, int(saveout))
-        self.add_operation(self.reg_block.USEBIAS, CSRMode.WRITE, int(usebias))
-        self.add_operation(self.reg_block.USESUMM, CSRMode.WRITE, int(usesumm))
-        self.add_operation(self.reg_block.SHIFTAMT, CSRMode.WRITE, shift_amount)
-        self.add_operation(self.reg_block.ACTFN, CSRMode.WRITE, int(activation_function))
-        self.add_operation(self.reg_block.REWEIGHTS, CSRMode.WRITE, int(reweights))
+        self._feature_ops = [  # replace previous feature ops
+            (self.reg_block.REINPUTS, CSRMode.WRITE, int(reinputs)),
+            (self.reg_block.SAVEOUT, CSRMode.WRITE, int(saveout)),
+            (self.reg_block.USEBIAS, CSRMode.WRITE, int(usebias)),
+            (self.reg_block.USESUMM, CSRMode.WRITE, int(usesumm)),
+            (self.reg_block.SHIFTAMT, CSRMode.WRITE, shift_amount),
+            (self.reg_block.ACTFN, CSRMode.WRITE, int(activation_function)),
+            (self.reg_block.REWEIGHTS, CSRMode.WRITE, int(reweights))
+        ]
+
 
 
 class MemSeqItem(uvm_sequence_item):

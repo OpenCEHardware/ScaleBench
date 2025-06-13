@@ -30,10 +30,10 @@ class NPU07_MUL_RandSize(BaseTest):
             reweights=False
         )
 
-        inputs_rows = random.randint(0, 8)
-        inputs_cols = random.randint(0, 8)
-        weights_rows = random.randint(0, 8)
-        weights_cols = random.randint(0, 8)
+        inputs_rows = random.randint(1, 9)
+        inputs_cols = random.randint(1, 9)
+        weights_rows = random.randint(1, 9)
+        weights_cols = random.randint(1, 9)
 
         # Using default value of systolic array size
         self.csr_item.matrix_setup(
