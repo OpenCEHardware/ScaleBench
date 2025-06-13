@@ -7,7 +7,7 @@ from common.sequences import *
 
 
 @pyuvm.test()
-class NPU30_Layer_Inference(BaseTest):
+class NPU31_Layer_Inference(BaseTest):
     """Inference using layers"""
 
     def end_of_elaboration_phase(self):
