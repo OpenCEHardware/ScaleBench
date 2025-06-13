@@ -7,13 +7,13 @@ from common.sequences import *
 
 
 @pyuvm.test()
-class NPU29_All_Ramdon_Summs(BaseTest):
+class NPU30_All_Ramdon_Summs(BaseTest):
     """Randomize with all enabled"""
 
     def end_of_elaboration_phase(self):
-        self.csr_item = csr_item = CSRSeqItem("NPU29_csr_item")
-        self.mem_item = MemSeqItem("NPU29_mem_item")
-        self.query = BasicQuerySeq("NPU29_seq", self.mem_item, self.csr_item)
+        self.csr_item = csr_item = CSRSeqItem("NPU30_csr_item")
+        self.mem_item = MemSeqItem("NPU30_mem_item")
+        self.query = BasicQuerySeq("NPU30_seq", self.mem_item, self.csr_item)
 
     async def run_phase(self):
         self.raise_objection()
