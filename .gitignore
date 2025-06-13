@@ -54,3 +54,4 @@ c5_pin_model_dump.txt
 hps_sdram_p0_all_pins.txt
 .vscode
 combined_results.xml
+*.html
