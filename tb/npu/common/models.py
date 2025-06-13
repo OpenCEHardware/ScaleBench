@@ -91,8 +91,6 @@ class NPUModel:
         return int(self.weight_rows * self.input_cols)
 
     def interrupt(self):
-        assert self.input_cols == self.weight_rows
-
         if not self.registers[0x20]:
             return [0] * (self.input_rows * self.weight_cols)
 
@@ -101,8 +99,9 @@ class NPUModel:
             for col in range(self.weight_cols):
                 product = self.bias[col] + self.summ[col]
 
-                for i in range(self.weight_rows):
-                    product += self.inputs[row * self.input_cols + i] * self.weights[i * self.weight_cols + col]
+                for i in range(max(self.input_cols, self.weight_rows)):
+                    if i < self.input_cols and i < self.weight_rows:
+                        product += self.inputs[row * self.input_cols + i] * self.weights[i * self.weight_cols + col]
 
                 if self.registers[0x30]:
                     if product < 0:
