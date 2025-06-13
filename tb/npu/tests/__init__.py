@@ -29,3 +29,4 @@ from .npu27_all_max_bmax_smax_aon import *
 from .npu28_all_special_bneg_smax_aon import *
 from .npu29_all_ramdon_brand_srand_arand import *
 from .npu30_all_ramdon_summs import *
+from .npu31_layer_inference import *

@@ -86,7 +86,7 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
 
     async def execute_query(self, mem_item, csr_item):
 
-        await RisingEdge(self.dut.rst_n)
+        # await RisingEdge(self.dut.rst_n)
 
         self.logger.info("STARTING OPERATION")
 
@@ -103,8 +103,6 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
         self.logger.info(f"EXIT_CODE: {exit_code}")
 
         await self.reg_write(self.reg_block.IRQ, 1)
-
-        await self.reset()
 
     async def load_csr(self, item):
 
