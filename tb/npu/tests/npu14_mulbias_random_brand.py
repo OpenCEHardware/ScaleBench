@@ -7,13 +7,13 @@ from common.sequences import *
 
 
 @pyuvm.test()
-class NPU17_MULACT_Max_Aon(BaseTest):
-    """Confirm pass-through of positive values"""
+class NPU14_MULBIAS_Random_B0(BaseTest):
+    """Confirm bias acccuracy with random data"""
 
     def end_of_elaboration_phase(self):
-        self.csr_item = csr_item = CSRSeqItem("NPU17_csr_item")
-        self.mem_item = MemSeqItem("NPU17_mem_item")
-        self.query = BasicQuerySeq("NPU17_seq", self.mem_item, self.csr_item)
+        self.csr_item = csr_item = CSRSeqItem("NPU14_csr_item")
+        self.mem_item = MemSeqItem("NPU14_mem_item")
+        self.query = BasicQuerySeq("NPU14_seq", self.mem_item, self.csr_item)
 
     async def run_phase(self):
         self.raise_objection()
@@ -25,7 +25,7 @@ class NPU17_MULACT_Max_Aon(BaseTest):
             usebias=True,
             usesumm=False,
             shift_amount=0,
-            activation_function=True,
+            activation_function=False,
             reweights=False
         )
 
@@ -33,18 +33,17 @@ class NPU17_MULACT_Max_Aon(BaseTest):
 
         # Using default value of systolic array size
         self.csr_item.matrix_setup(
-            inputs_rows,
+            inputs_rows, 
             inputs_cols,
             weights_rows, 
-            weights_cols,
-            base_addr=0x0,
+            weights_cols, 
+            base_addr=0x0, 
             result_addr=1024
         )
 
-        self.mem_item.randomize_inputs(inputs_rows, inputs_cols, 63, 63)
-        self.mem_item.randomize_weights(weights_rows, weights_cols, 63, 63)
-
-        self.logger.info(self.mem_item)
+        self.mem_item.randomize_inputs(inputs_rows, inputs_cols)
+        self.mem_item.randomize_weights(weights_rows, weights_cols)
+        self.mem_item.bias = [random.randint(-0x7FFFFFFF, 0x7FFFFFFF) for _ in range(inputs_cols)]
 
         await self.query.start()
 

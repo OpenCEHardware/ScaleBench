@@ -310,7 +310,7 @@ class CSRSeqItem(uvm_sequence_item):
         assert all(isinstance(x, int) for x in [inputs_rows, inputs_cols, weights_rows, weights_cols, base_addr, result_addr]), \
             "All parameters must be integers"
 
-        self._matrix_ops = [  # replace previous matrix ops
+        self._matrix_ops = [
             (self.reg_block.INROWS, CSRMode.WRITE, inputs_rows),
             (self.reg_block.INCOLS, CSRMode.WRITE, inputs_cols),
             (self.reg_block.WGHTROWS, CSRMode.WRITE, weights_rows),
@@ -320,7 +320,7 @@ class CSRSeqItem(uvm_sequence_item):
         ]
 
     def features_setup(self, reinputs=False, saveout=True, usebias=True, usesumm=True, shift_amount=0, activation_function=False, reweights=False):
-        self._feature_ops = [  # replace previous feature ops
+        self._feature_ops = [
             (self.reg_block.REINPUTS, CSRMode.WRITE, int(reinputs)),
             (self.reg_block.SAVEOUT, CSRMode.WRITE, int(saveout)),
             (self.reg_block.USEBIAS, CSRMode.WRITE, int(usebias)),
@@ -333,14 +333,12 @@ class CSRSeqItem(uvm_sequence_item):
 
 
 class MemSeqItem(uvm_sequence_item):
-    def __init__(self, name, min_number=0, max_number=255, weights=[], inputs=[], bias=[], summ=[]):
+    def __init__(self, name, weights=[], inputs=[], bias=[], summ=[]):
         super().__init__(name)
         self.weights = weights
         self.inputs = inputs
         self.bias = bias
         self.summ = summ
-        self.min_number = min_number
-        self.max_number = max_number
 
     def __str__(self):
         return "\n".join([
@@ -359,16 +357,16 @@ class MemSeqItem(uvm_sequence_item):
             self.summ == other.summ
         )
 
-    def randomize_weights(self, rows, cols):
+    def randomize_weights(self, rows, cols, min_number=0, max_number=255):
         total = rows * cols
-        self.weights = [random.randint(self.min_number, self.max_number) for _ in range(total)]
+        self.weights = [random.randint(min_number, max_number) for _ in range(total)]
 
-    def randomize_inputs(self, rows, cols):
+    def randomize_inputs(self, rows, cols, min_number=0, max_number=255):
         total = rows * cols
-        self.inputs = [random.randint(self.min_number, self.max_number) for _ in range(total)]
+        self.inputs = [random.randint(min_number, max_number) for _ in range(total)]
 
-    def generate_bias(self, length):
-        self.bias = [random.randint(self.min_number, self.max_number) for _ in range(length)]
+    def randomize_bias(self, length, min_number=0, max_number=255):
+        self.bias = [random.randint(min_number, max_number) for _ in range(length)]
 
-    def generate_summs(self, length):
-        self.summ = [random.randint(self.min_number, self.max_number) for _ in range(length)]
+    def randomize_summs(self, length, min_number=0, max_number=255):
+        self.summ = [random.randint(min_number, max_number) for _ in range(length)]

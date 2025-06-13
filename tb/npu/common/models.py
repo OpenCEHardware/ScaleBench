@@ -196,7 +196,7 @@ class Memory:
         assert not (addr & ((data_width // 8) - 1))
         if isinstance(data, int):
             data = (data,)
-        self.mem[addr:addr + (data_width // 8) * len(data)] = b''.join(val.to_bytes((data_width // 8), 'little') for val in data)
+        self.mem[addr:addr + (data_width // 8) * len(data)] = b''.join((val & ((1 << data_width) - 1)).to_bytes((data_width // 8), 'little') for val in data)
 
     def read_mem(self, addr, length=1, data_width=NPUArch.INPUT_DATA_WIDTH, signed=False):
         assert not (addr & ((data_width // 8) - 1))

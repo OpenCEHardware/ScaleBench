@@ -12,7 +12,7 @@ from .npu10_mulbias_zeros_bneg import *
 from .npu11_mulbias_max_bmax import *
 from .npu12_mulbias_special_bneg import *
 from .npu13_mulbias_identity_bmax import *
-from .npu14_mulbias_random_b0 import *
+from .npu14_mulbias_random_brand import *
 from .npu15_mulact_zeros_aon import *
 from .npu16_mulact_negativeonly_aon import *
 from .npu17_mulact_max_aon import *

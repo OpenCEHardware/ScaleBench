@@ -36,11 +36,11 @@ class NPU07_MUL_RandSize(BaseTest):
 
         # Using default value of systolic array size
         self.csr_item.matrix_setup(
-            inputs_rows, 
+            inputs_rows,
             inputs_cols,
-            weights_rows, 
-            weights_cols, 
-            base_addr=0x0, 
+            weights_rows,
+            weights_cols,
+            base_addr=0x0,
             result_addr=1024
         )
 

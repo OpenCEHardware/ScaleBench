@@ -79,7 +79,7 @@ class NPUScoreboard(uvm_scoreboard):
 
             self.model.interrupt()
 
-            actual = self.mem.read_mem(self.model.get_result_address(), length=self.model.get_result_length(), data_width=32, signed=True)
+            actual = self.mem.read_mem(self.model.get_result_address(), length=self.model.get_result_length(), data_width=NPUArch.OUTPUT_DATA_WIDTH, signed=True)
             expected = self.model.predict_result()
 
             if actual != expected:

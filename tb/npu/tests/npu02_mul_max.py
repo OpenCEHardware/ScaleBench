@@ -45,9 +45,9 @@ class NPU02_MUL_Max(BaseTest):
             result_addr=1024
         )
 
-        self.mem_item.inputs = [250] * inputs_cols * inputs_rows
+        self.mem_item.inputs = [64] * inputs_cols * inputs_rows
 
-        self.mem_item.weights = [175] * inputs_cols * inputs_rows
+        self.mem_item.weights = [64] * inputs_cols * inputs_rows
 
         await self.query.start()
 

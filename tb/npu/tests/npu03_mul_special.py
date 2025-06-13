@@ -46,7 +46,7 @@ class NPU03_MUL_Special(BaseTest):
         )
 
         pattern_alternating = [
-            0 if (i + j) % 2 == 0 else 127
+            0 if (i + j) % 2 == 0 else random.randint(0, 255)
             for i in range(inputs_rows) for j in range(inputs_cols)
         ]
 
