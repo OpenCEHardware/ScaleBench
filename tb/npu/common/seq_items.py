@@ -368,16 +368,16 @@ class MemSeqItem(uvm_sequence_item):
             self.summ == other.summ
         )
 
-    def randomize_weights(self, rows, cols, min_number=0, max_number=255):
+    def randomize_weights(self, rows, cols, min_number=-255, max_number=255):
         total = rows * cols
         self.weights = [random.randint(min_number, max_number) for _ in range(total)]
 
-    def randomize_inputs(self, rows, cols, min_number=0, max_number=255):
+    def randomize_inputs(self, rows, cols, min_number=-255, max_number=255):
         total = rows * cols
         self.inputs = [random.randint(min_number, max_number) for _ in range(total)]
 
-    def randomize_bias(self, length, min_number=0, max_number=255):
+    def randomize_bias(self, length, min_number=-2**31, max_number=2**31 - 1):
         self.bias = [random.randint(min_number, max_number) for _ in range(length)]
 
-    def randomize_summs(self, length, min_number=0, max_number=255):
+    def randomize_summs(self, length, min_number=-2**31, max_number=2**31 - 1):
         self.summ = [random.randint(min_number, max_number) for _ in range(length)]

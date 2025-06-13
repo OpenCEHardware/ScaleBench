@@ -23,14 +23,14 @@ class NPU29_All_Ramdon_Brand_Srand_Arand(BaseTest):
             self.logger.info(f"ITERATION: {idx}")
 
             self.csr_item.features_setup(
-                reinputs=False,
-                saveout=True, 
+                reinputs=random.choice([True, False]),
+                saveout=random.choice([True, False]), 
                 # The DUT does not support disabling of BIAS and SUMM at the same time.
-                usebias=True,
-                usesumm=True,
+                usebias=random.choice([True, False]),
+                usesumm=random.choice([True, False]),
                 shift_amount=random.randint(-32, 32),
-                activation_function=True,
-                reweights=False
+                activation_function=random.choice([True, False]),
+                reweights=random.choice([True, False])
             )
 
             inputs_rows = random.randrange(2, 9, 2)

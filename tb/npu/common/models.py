@@ -88,13 +88,14 @@ class NPUModel:
         return int(self.registers[0x38])
 
     def get_result_length(self):
-        return int(self.input_rows * self.weight_cols)
+        return int(self.weight_rows * self.input_cols)
 
     def interrupt(self):
         assert self.input_cols == self.weight_rows
 
         if not self.registers[0x20]:
-            self.last_result = [0] * (self.input_rows * self.weight_cols)
+            self.last_result = [0] * (self.weight_rows * self.input_cols)
+            return
 
         matrix = []
         for row in range(self.input_rows):
