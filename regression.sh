@@ -10,3 +10,5 @@ for x in $(seq 100); do
 	seed=$RANDOM
 	make tb/npu/tb_test enable=opt,rand seed=$seed
 done
+
+python combine_results.py
