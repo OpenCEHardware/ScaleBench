@@ -24,7 +24,7 @@ class NPU20_MULSHFT_Zeros_Smax(BaseTest):
             # The DUT does not support disabling of BIAS and SUMM at the same time.
             usebias=True,
             usesumm=False,
-            shift_amount=0,
+            shift_amount=32,
             activation_function=False,
             reweights=False
         )

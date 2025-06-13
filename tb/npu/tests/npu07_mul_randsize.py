@@ -30,27 +30,31 @@ class NPU07_MUL_RandSize(BaseTest):
             reweights=False
         )
 
-        inputs_rows = 7
-        inputs_cols = weights_rows = 7
-        weights_cols = 7
+        for idx in range(10):
 
-        # Using default value of systolic array size
-        self.csr_item.matrix_setup(
-            inputs_rows,
-            inputs_cols,
-            weights_rows,
-            weights_cols,
-            base_addr=0x0,
-            result_addr=1024
-        )
+            self.logger.info(f"ITERATION: {idx}")
 
-        self.mem_item.randomize_inputs(inputs_rows, inputs_cols)
-        self.mem_item.randomize_weights(weights_rows, weights_cols)
+            inputs_rows = random.randrange(2, 9, 2)
+            inputs_cols = weights_rows = random.randrange(2, 9, 2)
+            weights_cols = random.randrange(2, 9, 2)
 
-        self.logger.info(self.csr_item)
-        self.logger.info(self.mem_item)
+            # Using default value of systolic array size
+            self.csr_item.matrix_setup(
+                inputs_rows,
+                inputs_cols,
+                weights_rows,
+                weights_cols,
+                base_addr=0x0,
+                result_addr=1024
+            )
 
-        await self.query.start()
+            self.mem_item.randomize_inputs(inputs_rows, inputs_cols)
+            self.mem_item.randomize_weights(weights_rows, weights_cols)
+
+            self.logger.info(self.csr_item)
+            self.logger.info(self.mem_item)
+
+            await self.query.start()
 
         self.drop_objection()
 
