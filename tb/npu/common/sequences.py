@@ -151,6 +151,7 @@ class NPUBaseSequence(uvm_sequence, uvm_report_object):
             self.logger.info("OPERATION FINISHED")
         except cocotb.result.SimTimeoutError:
             self.logger.error(f"IRQ TIMEOUT AFTER: {cycles} cycles")
+            ConfigDB().set(None, "", "error", True)
     
     async def reset(self):
         self.logger.info("RESETTING NPU")

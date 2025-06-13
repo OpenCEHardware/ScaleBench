@@ -98,7 +98,7 @@ class NPUScoreboard(uvm_scoreboard):
         self.check_fifo(self.csr_b_fifo, "csr_b_fifo")
 
         if self.error:
-            raise UVMError(f"{self.get_name()} failed, check previous errors")
+            ConfigDB().set(None, "", "error", True)
 
     def check_fifo(self, fifo, fifo_name):
         if not fifo.is_empty():

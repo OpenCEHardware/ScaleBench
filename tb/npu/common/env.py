@@ -68,3 +68,8 @@ class NPUEnv(uvm_env):
 class BaseTest(uvm_test):
     def build_phase(self):
         self.env = NPUEnv('env', self)
+        ConfigDB().set(None, "", "error", False)
+
+    def final_phase(self):
+        if ConfigDB().get(None, "", "error"):
+            raise UVMError(f"{type(self).__name__} failed, check errors")
