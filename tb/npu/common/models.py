@@ -97,11 +97,14 @@ class NPUModel:
         matrix = []
         for row in range(self.input_rows):
             for col in range(self.weight_cols):
-                product = self.bias[col] + self.summ[col]
+                product = 0
 
                 for i in range(max(self.input_cols, self.weight_rows)):
                     if i < self.input_cols and i < self.weight_rows:
                         product += self.inputs[row * self.input_cols + i] * self.weights[i * self.weight_cols + col]
+
+                if col < len(self.bias):
+                    product += self.bias[col] + self.summ[col]
 
                 if self.registers[0x30]:
                     if product < 0:
