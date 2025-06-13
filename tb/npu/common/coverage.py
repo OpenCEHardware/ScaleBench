@@ -3,7 +3,7 @@ from cocotb_coverage.coverage import *
 
 @CoverPoint("io.irq",
             bins=[True],
-            bins_labels=['done'])
+            bins_labels=['Done'])
 def irq(irq):
     pass
 
@@ -67,13 +67,9 @@ def shape(input_rows, input_cols, weight_rows, weight_cols):
             bins_labels=['Off', 'ReLU'],
             xf=lambda shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn:
                 int(actfn))
-@CoverCross("features.all",
-            items=["features.shiftamt",
-                   "features.saveout",
+@CoverCross("features.setup",
+            items=["features.saveout",
                    "features.usebias",
-                   "features.usesumm",
-                   "features.reinputs",
-                   "features.reweights",
                    "features.actfn"])
 def features(shiftamt, saveout, usebias, usesumm, reinputs, reweights, actfn):
     pass
